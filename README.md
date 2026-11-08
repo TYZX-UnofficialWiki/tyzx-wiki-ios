@@ -6,7 +6,17 @@
 
 本仓库 fork 自 [wikimedia/wikipedia-ios](https://github.com/wikimedia/wikipedia-ios)。天一版复用上游 `WMFData` 的网络、取消请求与存储能力，以及 `WMFComponents` 的导航、字体和 HTML 摘要处理；另行适配天一维基的 MediaWiki API。上游许可证与作者声明保留，原始说明移至 [上游 README 存档](docs/upstream-wikipedia-ios.md)。
 
-<p><img src="TianyiWiki/Screenshots/language-zh.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/BadApple-playing.png" width="240" alt="Tianyi Wiki reader"></p>
+<p><img src="TianyiWiki/Screenshots/native-home-offline.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/native-BadApple-offline.png" width="240" alt="Tianyi Wiki reader"></p>
+
+## 原生首页与离线播放
+
+首页按中文站首页的真实栏目和内容重建为原生卡片，使用维护者提供的透明字标，保留校园照片及来源入口。文字与首页图片随应用内置，首次离线启动也可见；这是随版本更新的首页快照，不伪装为实时网页。最近更改联网刷新并在本机缓存，按标题仅保留最新记录，最多 5 条。
+
+阅读底栏在 iOS 26+ 使用真正的 `glassEffect`。深色模式同时覆盖正文标题、图注、表格以及必要的站点兼容页面；兼容页面隐藏顶部公告和站点导航。普通词条和帮助页优先使用应用正文排版。
+
+Bad Apple!! 改用 AVPlayer 播放本机音频，应用自带的正文动画逻辑按原生时间驱动黑幕。首次打开需联网下载音乐与帧数据，同时缓存词条正文，之后可从本机播放。远端原网页不参与播放；图片和外链仍不保证离线。清除离线收藏时也删除彩蛋素材。
+
+阅读器提供评论入口，保留站点登录、权限和提交机制。页面无评论区域时显示“此词条关闭了评论功能”，不以讨论页冒充评论。评论需要联网；未在正式站点发送测试评论。普通黑幕支持触摸揭示。
 
 ## 当前站点
 
@@ -28,7 +38,6 @@
 ## 天一版功能
 
 - iOS / iPadOS 26 及以上使用系统 Liquid Glass 导航和标签栏，随系统深色及辅助功能设置调整。正文保持适合阅读的背景；较早系统使用原生兼容样式。
-- `Bad Apple!!` 使用完整在线网页，保留正文黑幕动画、音乐、暂停和退出；离线正文模式不运行彩蛋。
 - 六语言界面与六站独立选择；阅读器支持已有对应词条的跨语言切换。
 - 原生校园导航、最近更改、随机词条及六站切换。
 - 通过标准 Action API 搜索词条，提供防抖、请求取消及失败重试。

@@ -38,7 +38,7 @@ import WMFComponents
     }
     func clearOffline() async {
         do {
-            try await cache.clear(); try store.save([WMFTianyiPage](), key: "saved"); saved = []
+            try await cache.clear(); try await TianyiBadAppleCache.shared.clear(); try store.save([WMFTianyiPage](), key: "saved"); saved = []
         } catch { storageError = error.localizedDescription }
     }
 }
@@ -124,7 +124,7 @@ struct TianyiContainer: UIViewControllerRepresentable {
     private func show(_ page: WMFTianyiPage, in nav: WMFComponentNavigationController) {
         // Special, help and category pages use the complete site so templates,
         // authentication and interactive flows retain their existing behavior.
-        if page.title.contains(":") || page.title.replacingOccurrences(of: "_", with: " ").caseInsensitiveCompare("Bad Apple!!") == .orderedSame {
+        if ["Special:", "特殊:", "Category:", "分类:", "Talk:", "讨论:"].contains(where: { page.title.hasPrefix($0) }) {
             let host = WMFComponentHostingController(rootView: TianyiSiteView(url: page.url))
             host.title = page.title; host.hidesBottomBarWhenPushed = true
             nav.pushViewController(host, animated: true)

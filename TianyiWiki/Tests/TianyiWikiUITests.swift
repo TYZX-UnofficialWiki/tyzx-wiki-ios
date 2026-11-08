@@ -106,24 +106,61 @@ final class TianyiWikiUITests: XCTestCase {
         XCTAssertTrue(result.waitForExistence(timeout: 30)); result.tap()
         let web = app.webViews.firstMatch
         XCTAssertTrue(web.waitForExistence(timeout: 30))
-        let play = web.buttons["播放"]
+        let play = app.buttons["播放"]
         XCTAssertTrue(play.waitForExistence(timeout: 45))
         expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: play)
         waitForExpectations(timeout: 45)
         play.tap()
-        XCTAssertTrue(web.buttons["暂停"].waitForExistence(timeout: 15))
-        let progress = web.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "0:[0-9]{2} / 3:39")).firstMatch
+        XCTAssertTrue(app.buttons["暂停"].waitForExistence(timeout: 15))
+        let progress = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "0:[0-9]{2} / 3:39")).firstMatch
         XCTAssertTrue(progress.waitForExistence(timeout: 10))
         let advances = NSPredicate { _, _ in progress.exists && progress.label != "0:00 / 3:39" }
         expectation(for: advances, evaluatedWith: nil)
         waitForExpectations(timeout: 15)
         attach(app, "BadApple-playing")
-        web.buttons["暂停"].tap()
-        XCTAssertTrue(web.buttons["播放"].exists)
-        web.buttons["阅读词条"].tap()
-        XCTAssertTrue(web.buttons["重播黑幕彩蛋"].waitForExistence(timeout: 5))
-        XCTAssertFalse(web.buttons["阅读词条"].exists)
+        app.buttons["暂停"].tap()
+        XCTAssertTrue(app.buttons["播放"].exists)
+        app.buttons["阅读词条"].tap()
+        XCTAssertTrue(app.buttons["播放"].exists)
+        XCTAssertEqual(progress.label, "0:00 / 3:39")
+        app.buttons["评论与讨论"].tap()
+        XCTAssertTrue(app.buttons["完成"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["此词条关闭了评论功能"].waitForExistence(timeout: 15))
+        app.buttons["完成"].tap()
         attach(app, "BadApple-restored")
+    }
+    @MainActor func testHomeAndBadAppleUseOfflineCache() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        let arguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh"]
+        app.launchArguments = arguments
+        app.launch()
+        app.tabBars.buttons["搜索"].tap()
+        let field = app.textFields["tianyi-search"]
+        field.tap(); field.typeText("Bad Apple!!")
+        let result = app.staticTexts["Bad Apple!!"].firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 30)); result.tap()
+        let play = app.buttons["播放"]
+        XCTAssertTrue(play.waitForExistence(timeout: 20))
+        expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: play)
+        waitForExpectations(timeout: 45)
+        app.terminate()
+        app.launchArguments = arguments + ["-TianyiOffline"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["欢迎来到天一维基"].waitForExistence(timeout: 10))
+        attach(app, "native-home-offline")
+        app.tabBars.buttons["书架"].tap()
+        app.buttons["阅读历史"].tap()
+        app.staticTexts["Bad Apple!!"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["播放"].waitForExistence(timeout: 10))
+        expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: app.buttons["播放"])
+        waitForExpectations(timeout: 10)
+        app.buttons["播放"].tap()
+        XCTAssertTrue(app.buttons["暂停"].waitForExistence(timeout: 5))
+        let progress = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "0:[0-9]{2} / 3:39")).firstMatch
+        expectation(for: NSPredicate { _, _ in progress.exists && progress.label != "0:00 / 3:39" }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        attach(app, "native-BadApple-offline")
     }
     @MainActor private func attach(_ app: XCUIApplication, _ name: String) {
         let item = XCTAttachment(screenshot: app.screenshot())

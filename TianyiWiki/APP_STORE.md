@@ -38,4 +38,4 @@ Apple 要求适用的备案信息与工信部备案及商店元数据相符；�
 
 ## Bad Apple!! 彩蛋的额外核验
 
-客户端为该词条保留完整在线网页脚本、动画帧及音频播放能力，不把音乐或动画帧直接打包进 IPA。音乐和影绘素材的分发权不由本仓库 MIT 代码许可或词条正文许可自动授予。本次未取得这些素材的 App Store 分发授权证明；发布前应确认实际使用方式和相应权利，并按审核规则提供说明。功能测试通过不代表版权审核已经完成。[Apple 知识产权要求（5.2）](https://developer.apple.com/app-store/review/guidelines/#intellectual-property)
+客户端为该词条保留应用内音频播放及本机缓存的动画帧能力，首次联网下载到设备缓存，不把音乐或动画帧直接打包进 IPA。音乐和影绘素材的分发权不由本仓库 MIT 代码许可或词条正文许可自动授予。本次未取得这些素材的 App Store 分发授权证明；发布前应确认实际使用方式和相应权利，并按审核规则提供说明。功能测试通过不代表版权审核已经完成。[Apple 知识产权要求（5.2）](https://developer.apple.com/app-store/review/guidelines/#intellectual-property)

@@ -16,6 +16,8 @@ for language in ['zh-Hans','en','fr','ja','ko','lzh']:
     inforefs.append(obj('infolocal'+language,f'isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "{language}"; path = "TianyiWiki/Resources/{language}.lproj/InfoPlist.strings"; sourceTree = "<group>";'))
 infovariant=obj('infovariant',f'isa = PBXVariantGroup; children = ({",".join(inforefs)},); name = InfoPlist.strings; sourceTree = "<group>";')
 infobuild=obj('infobuild',f'isa = PBXBuildFile; fileRef = {infovariant};')
+home=obj('home','isa = PBXFileReference; lastKnownFileType = text.json; path = TianyiWiki/Resources/HomeSnapshot.json; sourceTree = \"<group>\";')
+homebuild=obj('homebuild',f'isa = PBXBuildFile; fileRef = {home};')
 privacy=obj('privacy','isa = PBXFileReference; lastKnownFileType = text.xml; path = TianyiWiki/PrivacyInfo.xcprivacy; sourceTree = "<group>";')
 privacybuild=obj('privacybuild',f'isa = PBXBuildFile; fileRef = {privacy};')
 license=obj('license','isa = PBXFileReference; lastKnownFileType = text; path = TianyiWiki/LICENSE.txt; sourceTree = "<group>";')
@@ -26,7 +28,7 @@ product=obj('product','isa = PBXFileReference; explicitFileType = wrapper.applic
 products=obj('products',f'isa = PBXGroup; children = ({product},); name = Products; sourceTree = "<group>";')
 main=obj('main',f'isa = PBXGroup; children = ({",".join(refs+[asset,privacy,products])},); sourceTree = "<group>";')
 src=obj('sources',f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(sources)},); runOnlyForDeploymentPostprocessing = 0;')
-res=obj('resources',f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({assetbuild},{privacybuild},{licensebuild},{noticesbuild},{localizationbuild},{infobuild},); runOnlyForDeploymentPostprocessing = 0;')
+res=obj('resources',f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({assetbuild},{privacybuild},{licensebuild},{noticesbuild},{localizationbuild},{infobuild},{homebuild},); runOnlyForDeploymentPostprocessing = 0;')
 framework=obj('frameworks','isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
 for level in ['Debug','Release']:
     obj('project'+level, f'isa = XCBuildConfiguration; buildSettings = {{ SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 17.0; CLANG_ENABLE_MODULES = YES; SWIFT_VERSION = 6.0; ONLY_ACTIVE_ARCH = YES; }}; name = {level};')

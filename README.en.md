@@ -6,7 +6,17 @@ An iPhone and iPad client for the **unofficial Jiangsu Tianyi High School wiki**
 
 This repository is a fork of [wikimedia/wikipedia-ios](https://github.com/wikimedia/wikipedia-ios). The Tianyi client reuses the upstream `WMFData` networking, request cancellation, and storage infrastructure, plus `WMFComponents` navigation controllers, fonts, and HTML snippet handling. It adds an adapter for Tianyi Wiki's standard MediaWiki API. Upstream copyright and license notices remain intact; the original README is preserved in [the upstream documentation archive](docs/upstream-wikipedia-ios.md).
 
-<p><img src="TianyiWiki/Screenshots/language-en.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/cross-language-en.png" width="240" alt="Tianyi Wiki reader"></p>
+<p><img src="TianyiWiki/Screenshots/native-home-offline.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/cross-language-en.png" width="240" alt="Tianyi Wiki reader"></p>
+
+## Native home and offline playback
+
+The Chinese wiki home is rebuilt as native cards from a bundled snapshot, with the maintainer’s transparent wordmark and campus photos. Text and home images work on first offline launch; the snapshot updates with app releases. Recent changes refresh online and cache locally: only the newest change per title, up to five entries.
+
+The reader uses real glassEffect controls on iOS 26+. Dark styling includes captions, tables and necessary web fallbacks, which hide site notices and navigation. Articles and help pages favor local article layout.
+
+Bad Apple!! uses AVPlayer with cached audio and app-controlled text animation driven by native playback time. The first visit downloads audio and frames and saves article HTML. Subsequent playback uses local files, without loading the original page. Linked images and external resources may still need a connection. Clearing offline articles also deletes these assets.
+
+Comments retain the site’s authentication and permissions. Pages without a comment region show “Comments are disabled for this article”; discussion pages are not substituted. Comments need a connection. No live test comments were posted. Text spoilers support touch-to-reveal.
 
 ## Wiki sites
 
@@ -28,7 +38,6 @@ Article coverage differs between sites. Some existing interlanguage links point 
 ## Current implementation
 
 - On iOS / iPadOS 26 and later, native navigation and tab bars adopt Liquid Glass and follow system appearance and accessibility settings. Article backgrounds prioritize reading; older systems retain compatible native styling.
-- `Bad Apple!!` uses the full online page to retain its text animation, music, pause, and exit controls. The Easter egg is not an offline-text feature.
 - Native campus navigation, recent changes, random articles, and switching between six wiki sites.
 - Search through the Action API, with debouncing, cancellation, and retry states.
 - Article HTML from `action=parse`, with a table of contents, text scaling, sharing, and links to revision history. Article layout uses WebKit with page JavaScript disabled, without depending on Wikimedia's Page Content Service.

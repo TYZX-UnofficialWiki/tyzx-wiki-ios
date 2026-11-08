@@ -43,3 +43,13 @@ xcodebuild -scheme WMFData \
   -only-testing:WMFDataTests/WMFBasicServiceTests \
   CODE_SIGNING_ALLOWED=NO test
 ```
+
+## 原生首页及播放器修订验收
+
+2026-11-08：9 项天一数据层测试通过（新增最近更改去重、按时间排序及 5 条上限）。修订后的完整 5 项 UI 流程通过；另一次独立离线流程通过：先缓存 Bad Apple，再以 Debug 禁网开关禁止 API 和素材下载，重启后首页可见，缓存词条从阅读历史打开，AVPlayer 播放时间继续前进。此模式用于测试，不是给正式版用户的网络设置。
+
+首页现在是中文首页内容与图片的内置原生快照，随版本更新；第一屏字标按维护者最新提供的透明 PNG 替代校徽。最近更改单独联网刷新并缓存。Bad Apple 用本地音频及帧数据驱动本地正文黑幕，无需在线原页面；普通图片和外链仍可能需要网络。iOS 26+ 阅读底栏改为真实 glassEffect，兼容页面隐藏顶端公告、导航并跟随深色模式。
+
+Bad Apple 当前服务端无评论区域；测试已确认显示“此词条关闭了评论功能”。有评论区域时保留站点表单与权限，没有向生产站点发布测试评论，尚未验证真实账号发言。保留媒体版权发布前核验要求。
+
+修订版 Debug 与无签名 Release 均成功构建。截图 `native-home-offline.png`、`native-BadApple-offline.png` 来自实际验收。

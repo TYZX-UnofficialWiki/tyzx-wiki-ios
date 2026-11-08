@@ -6,10 +6,19 @@ Client iPhone et iPad du **wiki non officiel du lycée Tianyi du Jiangsu**. La c
 
 Ce dépôt est un fork de [Wikipedia iOS](https://github.com/wikimedia/wikipedia-ios). Il réutilise les services réseau, l’annulation des requêtes et le stockage de `WMFData`, ainsi que la navigation, les polices et le traitement des extraits HTML de `WMFComponents`. Une couche spécifique adapte les API MediaWiki de Tianyi. Le [README d’origine](docs/upstream-wikipedia-ios.md) et les mentions de droits sont conservés.
 
+## Accueil natif et lecture hors ligne
+
+L’accueil chinois est reconstruit en cartes natives avec le lettrage transparent fourni et les photos du campus. Le texte et les images sont intégrés, disponibles au premier démarrage hors ligne ; cet instantané est actualisé avec les versions. Les modifications récentes sont mises en cache : cinq articles au maximum, dernière modification de chacun uniquement.
+
+Sous iOS 26+, les commandes de lecture utilisent glassEffect. Le mode sombre couvre légendes, tableaux et pages web de compatibilité, dont les annonces et la navigation sont masquées.
+
+Bad Apple!! utilise AVPlayer et une animation du texte pilotée par le temps natif. La première visite télécharge musique et images binaires de l’animation et conserve le texte. Ensuite la lecture utilise les fichiers locaux, sans charger la page d’origine ; les médias liés peuvent nécessiter Internet. Effacer les articles hors ligne supprime aussi ces données.
+
+Les commentaires conservent l’authentification et les autorisations du site. Sans zone de commentaires, l’app indique qu’ils sont désactivés, sans remplacer cette fonction par une discussion. Ils nécessitent Internet ; aucun commentaire de test n’a été publié. Les textes masqués se révèlent au toucher.
+
 ## Fonctionnalités et langues
 
 - Sous iOS / iPadOS 26 et ultérieur, la navigation et les onglets natifs utilisent Liquid Glass et suivent les réglages système. Le fond des articles privilégie la lecture ; les systèmes antérieurs gardent un style natif compatible.
-- `Bad Apple!!` utilise la page en ligne complète afin de conserver l’animation du texte, la musique et les commandes de pause et de sortie. Cet effet n’est pas disponible hors ligne.
 - Interface en chinois simplifié, anglais, français, japonais, coréen et chinois classique.
 - Langue de l’interface et langue du wiki indépendantes : une interface française peut afficher un article chinois ou japonais.
 - Recherche native, navigation sur le campus, modifications récentes et article au hasard.

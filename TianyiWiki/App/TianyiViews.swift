@@ -33,33 +33,7 @@ struct TianyiExploreView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 16) {
-                    Image("TianyiWordmark").resizable().scaledToFit().frame(maxHeight: 100).padding(.vertical, 12)
-                        .frame(maxWidth: .infinity).background(.white, in: RoundedRectangle(cornerRadius: 16))
-                    Text(t("记录校园，共享知识。"))
-                        .font(Font(WMFFont.for(.boldTitle1)))
-                    Text(t("一所学校的记忆，一群人的共同编写。"))
-                        .font(Font(WMFFont.for(.subheadline))).foregroundStyle(.secondary)
-                    Button { open(WMFTianyiPage(title: site == .zh ? "江苏省天一中学" : "Special:MainPage", site: site)) } label: {
-                        Label(t("开始阅读"), systemImage: "arrow.right")
-                    }.buttonStyle(.borderedProminent)
-                }.padding(20).background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
-                HStack {
-                    Text(t("漫游校园") + " · " + site.name).font(Font(WMFFont.for(.boldTitle3)))
-                    Spacer()
-                    Button { Task { await random() } } label: {
-                        if randomLoading { ProgressView() } else { Image(systemName: "shuffle") }
-                    }.disabled(randomLoading).accessibilityLabel(t("随机词条"))
-                }
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(topics, id: \.0) { topic in
-                        Button { open(WMFTianyiPage(title: topic.1, site: site)) } label: {
-                            Label(topic.0, systemImage: topic.2).font(Font(WMFFont.for(.semiboldSubheadline)))
-                                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
-                        }
-                    }
-                }
+                TianyiHomeContent(open: open)
                 HStack { Text(t("最近更改")).font(Font(WMFFont.for(.boldTitle3))); Spacer(); if loading { ProgressView() } }
                 if let error { Text(error).font(.subheadline).foregroundStyle(.secondary); Button(t("重新加载")) { Task { await load() } } }
                 LazyVStack(spacing: 0) {
@@ -77,9 +51,10 @@ struct TianyiExploreView: View {
             .task(id: site) { await load() }.refreshable { await load() }
     }
     private func load() async {
-        loading = true; error = nil; recent = []
+        loading = true; error = nil
+        if let data = UserDefaults.standard.data(forKey: "recent-" + site.rawValue), let saved = try? JSONDecoder().decode([WMFTianyiChange].self, from: data) { recent = saved }
         defer { if !Task.isCancelled { loading = false } }
-        do { let changes = try await WMFTianyiDataController.shared.recent(site: site); try Task.checkCancellation(); recent = changes }
+        do { let changes = try await WMFTianyiDataController.shared.recent(site: site); try Task.checkCancellation(); recent = changes; if let data = try? JSONEncoder().encode(changes) { UserDefaults.standard.set(data, forKey: "recent-" + site.rawValue) } }
         catch { if !Task.isCancelled { self.error = tianyiErrorDescription(error) } }
     }
     private func random() async {

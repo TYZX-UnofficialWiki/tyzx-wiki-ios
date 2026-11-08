@@ -2,6 +2,12 @@ import XCTest
 @testable import WMFData
 
 final class WMFTianyiDataControllerTests: XCTestCase {
+    func testRecentChangesAreNewestPerTitleAndLimitedToFive() throws {
+        let values = (0..<12).map { i in "{\"rcid\":\(i),\"title\":\"Page \(i/2)\",\"timestamp\":\"2026-11-08T00:00:\(String(format: "%02d",i))Z\"}" }
+        let changes = try JSONDecoder().decode([WMFTianyiChange].self, from: Data(("[" + values.joined(separator: ",") + "]").utf8))
+        let result = WMFTianyiDataController.latestUniqueChanges(changes)
+        XCTAssertEqual(result.map(\.rcid), [11,9,7,5,3])
+    }
     func testTitleEncodingAndSixHostWhitelist() throws {
         for site in WMFTianyiSite.allCases {
             let title = "中文 A&B?# /100%"

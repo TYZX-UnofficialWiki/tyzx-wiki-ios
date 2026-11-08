@@ -57,7 +57,7 @@ public struct WMFTianyiSearchHit: Decodable, Identifiable, Sendable {
     public let snippet: String
     public var id: Int { pageid }
 }
-public struct WMFTianyiChange: Decodable, Identifiable, Sendable {
+public struct WMFTianyiChange: Codable, Identifiable, Sendable {
     public let rcid: Int
     public let title: String
     public let timestamp: String
@@ -121,6 +121,9 @@ public struct WMFTianyiDataController: Sendable {
     public init(service: any WMFService = WMFBasicService()) { self.service = service }
     private func fetch(site: WMFTianyiSite, parameters: [String: String]) async throws -> TianyiResponse {
         try Task.checkCancellation()
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-TianyiOffline") { throw URLError(.notConnectedToInternet) }
+        #endif
         let cancellation = WMFRequestCancellation()
         // The request is created inside the continuation: its legacy Any-valued fields
         // never cross an actor boundary. The decoded response is a Sendable value.
@@ -146,9 +149,13 @@ public struct WMFTianyiDataController: Sendable {
         return hits
     }
     public func recent(site: WMFTianyiSite) async throws -> [WMFTianyiChange] {
-        let response = try await fetch(site: site, parameters: ["action": "query", "list": "recentchanges", "rcnamespace": "0", "rctype": "edit|new", "rcshow": "!bot", "rcprop": "title|timestamp|ids", "rclimit": "25"])
+        let response = try await fetch(site: site, parameters: ["action": "query", "list": "recentchanges", "rcnamespace": "0", "rctype": "edit|new", "rcshow": "!bot", "rcprop": "title|timestamp|ids", "rclimit": "500", "rcdir": "older"])
         guard let changes = response.query?.recentchanges else { throw WMFTianyiError.invalidResponse }
-        return changes
+        return Self.latestUniqueChanges(changes)
+    }
+    public static func latestUniqueChanges(_ changes: [WMFTianyiChange]) -> [WMFTianyiChange] {
+        var titles = Set<String>()
+        return Array(changes.sorted { $0.timestamp > $1.timestamp }.filter { titles.insert($0.title).inserted }.prefix(5))
     }
     public func random(site: WMFTianyiSite) async throws -> String {
         let response = try await fetch(site: site, parameters: ["action": "query", "list": "random", "rnnamespace": "0", "rnlimit": "1"])

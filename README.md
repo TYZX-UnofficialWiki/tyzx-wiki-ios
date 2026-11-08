@@ -1,86 +1,80 @@
-# Wikipedia iOS
-The official Wikipedia iOS app.
+# 天一维基 iOS
 
-[![Wikipedia](https://circleci.com/gh/wikimedia/wikipedia-ios.svg?style=shield)](https://github.com/wikimedia/wikipedia-ios)
-[![MIT license](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://raw.githubusercontent.com/wikimedia/wikipedia-ios/main/LICENSE.txt)
+[简体中文](README.md) | [English](README.en.md) | [Français](README.fr.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [文言](README.lzh.md)
 
-* **License**: MIT License
-* **Source repo**: https://github.com/wikimedia/wikipedia-ios
-* **Planning (bugs & features)**: https://phabricator.wikimedia.org/project/view/782/
-* **Team page**: https://www.mediawiki.org/wiki/Wikimedia_Apps/Team/iOS
+江苏省天一中学非官方维基的 iPhone / iPad 客户端，记录学校历史、校园地点、社团、活动与校园文化。由社区共同编写，不代表学校官方立场，也不是 Wikimedia Foundation 的官方应用。
 
-## Building and Running
+本仓库 fork 自 [wikimedia/wikipedia-ios](https://github.com/wikimedia/wikipedia-ios)。天一版复用上游 `WMFData` 的网络、取消请求与存储能力，以及 `WMFComponents` 的导航、字体和 HTML 摘要处理；另行适配天一维基的 MediaWiki API。上游许可证与作者声明保留，原始说明移至 [上游 README 存档](docs/upstream-wikipedia-ios.md)。
 
-Note: Your Xcode version must be at least 16.0.
-In the directory, run `./scripts/setup`.  Note: going to `scripts` directory and running `setup` will not work due to relative paths.
+<p><img src="TianyiWiki/Screenshots/language-zh.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/BadApple-playing.png" width="240" alt="Tianyi Wiki reader"></p>
 
-Running `scripts/setup` will setup your computer to build and run the app. The script assumes you have Xcode installed already. It will install [homebrew](https://brew.sh), [SwiftLint](https://github.com/realm/SwiftLint), and [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html). It will also create a pre-commit hook that uses ClangFormat for linting Objective-C code.
+## 当前站点
 
-After running `scripts/setup`, you should be able to open `Wikipedia.xcodeproj` and run the app on the iOS Simulator (using the **Wikipedia** scheme and target). If you encounter any issues, please don't hesitate to let us know via a [bug report](https://phabricator.wikimedia.org/maniphest/task/edit/form/1/?title=[BUG]&projects=wikipedia-ios-app-product-backlog,ios-bug-backlog&description=%3D%3D%3D+How+many+times+were+you+able+to+reproduce+it?%0D%0A%0D%0A%3D%3D%3D+Steps+to+reproduce%0D%0A%23+%0D%0A%23+%0D%0A%23+%0D%0A%0D%0A%3D%3D%3D+Expected+results%0D%0A%0D%0A%3D%3D%3D+Actual+results%0D%0A%0D%0A%3D%3D%3D+Screenshots%0D%0A%0D%0A%3D%3D%3D+Environments+observed%0D%0A**App+version%3A+**+%0D%0A**OS+versions%3A**+%0D%0A**Device+model%3A**+%0D%0A**Device+language%3A**+%0D%0A%0D%0A%3D%3D%3D+Regression?+%0D%0A%0D%0A+Tag++task+with+%23Regression+%0A).
+| 语言 | 地址 |
+| --- | --- |
+| 中文 | https://zh-wiki.tyzx.org |
+| English | https://en-wiki.tyzx.org |
+| Français | https://fr-wiki.tyzx.org |
+| 日本語 | https://ja-wiki.tyzx.org |
+| 한국어 | https://ko-wiki.tyzx.org |
+| 文言 | https://lzh-wiki.tyzx.org |
 
-### Required Dependencies
-If you'd rather install the development prerequisites yourself without our script:
+中文旧域名 `wiki.tyzx.org` 仍识别为中文站。站点内容与账号服务由天一维基运营，不能使用维基百科账号代替。
 
-* [**Xcode**](https://itunes.apple.com/us/app/xcode/id497799835) - The easiest way to get Xcode is from the [App Store](https://itunes.apple.com/us/app/xcode/id497799835?mt=12), but you can also download it from [developer.apple.com](https://developer.apple.com/) if you have an Apple ID registered with an Apple Developer account.
-* [**SwiftLint**](https://github.com/realm/SwiftLint) - We use this for linting Swift code.
-* [**ClangFormat**](https://clang.llvm.org/docs/ClangFormat.html) - We use this for linting Objective-C code.
+各语言站点的条目覆盖不一致，部分现有跨语言链接的目标页面尚未创建。客户端会提示缺页并提供语言站首页入口，不自动生成或伪造译文。
 
-## Contributing
-Covered in our [contributing documentation](https://www.mediawiki.org/wiki/Wikimedia_Apps/Developing_for_the_apps#Contribute_to_iOS) on MediaWiki.
+[验证记录](TianyiWiki/VALIDATION.md) · [App Store](TianyiWiki/APP_STORE.md)
 
-## Development Guidelines
-These are general guidelines rather than hard rules.
+## 天一版功能
 
-### Coding Guidelines
-- **Objective-C** - [Apple's Coding Guidelines for Cocoa](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html)
-- **Swift** - [swift.org API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
+- iOS / iPadOS 26 及以上使用系统 Liquid Glass 导航和标签栏，随系统深色及辅助功能设置调整。正文保持适合阅读的背景；较早系统使用原生兼容样式。
+- `Bad Apple!!` 使用完整在线网页，保留正文黑幕动画、音乐、暂停和退出；离线正文模式不运行彩蛋。
+- 六语言界面与六站独立选择；阅读器支持已有对应词条的跨语言切换。
+- 原生校园导航、最近更改、随机词条及六站切换。
+- 通过标准 Action API 搜索词条，提供防抖、请求取消及失败重试。
+- 通过 `action=parse` 加载正文，提供目录跳转、字号调整、分享和修订历史入口。正文使用禁用网页 JavaScript 的 WebKit 排版，不依赖 Wikimedia Page Content Service。
+- 收藏时保存正文，在本机离线阅读；图片、音视频和外链仍需联网。保存的正文可能落后于线上内容，可手动刷新或删除。
+- 本机收藏、最多 200 条阅读历史，以及清除数据入口。
+- 图标使用项目维护者提供的原始字标，居中放置在纯白方形画布上，没有重绘文字。
 
-### Formatting
-We use Xcode's default 4 space indentation and our `.clang-format` file with the pre-commit hook setup by `scripts/setup`. Where possible, our Swift code is automatically formatted by [SwiftLint](https://github.com/realm/SwiftLint) based on the rules defined in `.swiftlint-autocorrect.yml`.
+目前是开发版本，尚未上架 App Store。登录、注册、编辑没有完成原生移植；分类和特殊页面使用站点网页作为兼容入口。推送、Wikimedia 推荐流、捐款、Wikidata 描述编辑及跨设备同步未接入天一版。用户界面支持简体中文、英语、法语、日语、韩语与文言；界面语言和站点语言独立选择。阅读器按现有跨语言链接切换对应词条，未建立对应版本的条目不会自动翻译。
 
-### Process and Code Review Norms
-Covered in the [process document](docs/process.md).
+## 运行天一版
 
-### Logging
-When reading logs, note that the log levels are shortened to emoji.
-- 🗣️ Verbose
-- 💬 Debug
-- ℹ️ Info
-- ⚠️ Warning
-- 🚨 Error
+需要支持 Swift 6.2 或以上的 Xcode，本次使用 Xcode 27.2。最低系统 iOS / iPadOS 17。
 
- The app only writes Warning and Error messages to the console for both Debug and Release mode. If you need to log all messages temporarily during troubleshooting, update [this level](https://github.com/wikimedia/wikipedia-ios/blob/main/Wikipedia/Code/WMFLogging.h#L6) to DDLogLevelAll.  
+1. 克隆本仓库。
+2. 打开根目录 **`TianyiWiki.xcodeproj`**，选择 **`TianyiWiki`** scheme。
+3. 等待 Swift Package 依赖解析完成，选择模拟器运行。
+4. 真机运行时选择自己的 Apple 开发团队，并按需调整 `org.tyzx.TianyiWiki` Bundle Identifier。
 
-### Testing
-The **Wikipedia** scheme is configured to execute the project's iOS unit tests, which can be run using the `Cmd+U` hotkey or the **Product → Test** menu bar action. In order for the tests to pass, the test device's language and region must be set to `en-US` in Settings → General → Language & Region. There is a [ticket filed](https://phabricator.wikimedia.org/T259859) to update the tests to pass regardless of language and region.
+`Wikipedia.xcodeproj` 保留为上游原工程，不是天一版启动入口。
 
-### Schemes and Targets
+```sh
+xcodebuild -project TianyiWiki.xcodeproj -scheme TianyiWiki \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' \
+  -derivedDataPath /tmp/tyzx-fork-build CODE_SIGNING_ALLOWED=NO build
+```
 
-* **Wikipedia** - Points to production servers. 
-* **Alpha** -  Points to various staging server environments. You can adjust these environments by changing the `current` [property](WMF%20Framework/Configuration.swift#L41) of `Configuration`:
-    - An option of `appsLabsForPCS` will point to the [Apps team's staging environment](https://mobileapps.wmflabs.org) for page content.
-    - An option of `betaCluster` will point to the [MediaWiki beta cluster environment](https://www.mediawiki.org/wiki/Beta_Cluster) for most API calls. This is meant to be a more blanket environment setting, so if this value exists it will also force the beta cluster environment for page content on the article view. This beta cluster environment is also where developers can test sandbox push notifications triggered across various wikis. This is selected by default.
-    
-    The Alpha scheme also has our feature flags set to true. It displays features that are still in development. It is pushed to TestFlight as a separate app.
-* **Experimental** - For one-off builds, to demonstrate early development or prototype features. This points to production servers by default, but can be adjusted to whatever server environment is needed via temporary adjustments in `Configuration`. We also sometimes use it for design review, before features go through PR review. It is pushed to TestFlight as a separate app.
+实际设备名称和系统版本可用 `xcrun simctl list devices available` 查询。依赖包括上游 WMFComponents 的 SDWebImage 与 Rive；这些依赖并不表示天一版使用了其所有功能。
 
-* **Local Page Content Service and Announcements** - used by engineers in Debug-mode only. This has the ability to toggle different local environments within the `current` [property](WMF%20Framework/Configuration.swift#L41) of `Configuration`:
-    - An option of `localPCS` will point to a locally running [mobileapps](https://gerrit.wikimedia.org/r/q/project:mediawiki%252Fservices%252Fmobileapps) repository for page content. This is selected by default.
-    - An option of `localAnnouncements` will point to a locally running [wikifeeds](https://gerrit.wikimedia.org/r/q/project:mediawiki%252Fservices%252Fwikifeeds) repository for the announcements endpoint. This is selected by default.
-    -  All other endpoints will point to production.
-* **RTL** - Launches the app in an RTL locale using the `-AppleLocale` launch argument. This is used by engineers in Debug-mode only. 
-* **Performance Testing** - This is a duplicate scheme of Wikipedia, but uses the Release configuration in its Run step instead of Debug. We use this scheme when we manually run performance tests as a part of our pre-release checklist.  
+## 源码位置
 
-* **WMF** - Bundles up the app logic shared between the main app and the extensions (widgets, notifications).
-* **Update Localizations** - Covered in the [localization document](docs/localization.md).
-* **Update Languages** - For adding new Wikipedia languages or updating language configurations. Covered in the [languages document](docs/languages.md).
-* **{{name}}Widget, {{name}}Notification, {{name}}Stickers** - Extensions for widgets, notifications, and stickers.
+- `TianyiWiki/App/`：应用入口、协调器、界面及阅读器。
+- `WMFData/Sources/WMFData/Data Controllers/Tianyi/`：天一 API、可信域名、持久化与正文缓存。
+- `TianyiWiki/Tests/`：天一版 UI 测试。
+- `WMFData/Tests/WMFDataTests/WMFTianyiDataControllerTests.swift`：接口、缓存及存储测试。
+- `TianyiWiki/Branding/`：维护者提供的图标原图。
+- `TianyiWiki/Scripts/`：图标及 Xcode 项目的重建脚本。
 
-### Continuous Integration
-Covered in the [CI document](docs/ci.md).
+## 隐私、内容和发布
 
-### Web Development
-The article view and several other components of the app rely on web components. Instructions for working on these components are covered in the [web development document](docs/web_dev.md).
+天一版不初始化 Wikimedia 登录、统计、推荐或捐款服务。匿名阅读请求会发送到天一维基，图片等资源可能由页面引用的其他服务提供。收藏及历史留在本机；不能据此把网站日志或第三方页面行为申报为“无数据收集”。
 
-### Contact Us
-If you have any questions or comments, you can email us at ios-support[at]wikimedia dot org. We'll also gladly accept any [bug reports](https://phabricator.wikimedia.org/maniphest/task/edit/form/1/?title=[BUG]&projects=wikipedia-ios-app-product-backlog,ios-bug-backlog&description=%3D%3D%3D+How+many+times+were+you+able+to+reproduce+it?%0D%0A%0D%0A%3D%3D%3D+Steps+to+reproduce%0D%0A%23+%0D%0A%23+%0D%0A%23+%0D%0A%0D%0A%3D%3D%3D+Expected+results%0D%0A%0D%0A%3D%3D%3D+Actual+results%0D%0A%0D%0A%3D%3D%3D+Screenshots%0D%0A%0D%0A%3D%3D%3D+Environments+observed%0D%0A**App+version%3A+**+%0D%0A**OS+versions%3A**+%0D%0A**Device+model%3A**+%0D%0A**Device+language%3A**+%0D%0A**App+language%3A**+%0D%0A%0D%0A%3D%3D%3D+Regression?+%0D%0A%0D%0A+Tag++task+with+%23Regression+%0A).
+正文、媒体和历史作者的权利以各页面实际声明为准；代码 MIT 许可不替代内容许可，也不授予校名、校名字标或 Wikimedia 商标的使用权。维护者应确认所提供字标的发布权利。
+
+App Store 发布评估见 [发布评估](TianyiWiki/APP_STORE.md)。当前仍需完成内容举报与处理流程、隐私及支持页面核验、所需账号管理能力、签名、真机测试和区域合规工作。代码可编译或 fork 成功不代表已经获准上架。
+
+## 开源许可
+
+原始 Wikipedia iOS 代码保留 [MIT License](LICENSE.txt)，版权 © 2013–2025 Wikimedia Foundation et al. 天一新增源码按相同 MIT 条款发布；提供的品牌图片不因放入此仓库而自动按 MIT 授权。第三方依赖按各自许可证使用。

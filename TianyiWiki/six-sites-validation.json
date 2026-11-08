@@ -1,0 +1,44 @@
+[
+  {
+    "language": "zh",
+    "title": "Bad Apple!!",
+    "revision": 547,
+    "bodyCharacters": 25927,
+    "translations": 5
+  },
+  {
+    "language": "en",
+    "title": "Bad Apple!!",
+    "revision": 83,
+    "bodyCharacters": 37200,
+    "translations": 5
+  },
+  {
+    "language": "fr",
+    "title": "Bad Apple!!",
+    "revision": 81,
+    "bodyCharacters": 6825,
+    "translations": 5
+  },
+  {
+    "language": "ja",
+    "title": "Bad Apple!!",
+    "revision": 78,
+    "bodyCharacters": 49986,
+    "translations": 5
+  },
+  {
+    "language": "ko",
+    "title": "Bad Apple!!",
+    "revision": 82,
+    "bodyCharacters": 31122,
+    "translations": 5
+  },
+  {
+    "language": "lzh",
+    "title": "Bad Apple!!",
+    "revision": 86,
+    "bodyCharacters": 18166,
+    "translations": 5
+  }
+]

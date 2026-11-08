@@ -1,0 +1,50 @@
+# iOS 向け天一ウィキ
+
+[简体中文](README.md) | [English](README.en.md) | [Français](README.fr.md) | 日本語 | [한국어](README.ko.md) | [文言](README.lzh.md)
+
+**江蘇省天一中学の非公式ウィキ**を閲覧する iPhone・iPad アプリです。学校の歴史、校内の場所、クラブ、行事や学校文化をコミュニティが記録します。学校や Wikimedia Foundation の公式アプリではありません。
+
+[Wikipedia iOS](https://github.com/wikimedia/wikipedia-ios) を fork し、`WMFData` の通信・リクエストキャンセル・保存機能と、`WMFComponents` のナビゲーション・フォント・HTML 要約処理を再利用しています。天一の MediaWiki API 向けに独自のアダプターを実装しています。[元の README](docs/upstream-wikipedia-ios.md)、著作権とライセンス表示は保持しています。
+
+## 機能と言語
+
+- iOS / iPadOS 26 以降では標準のナビゲーションとタブバーに Liquid Glass を使用し、システムの外観・アクセシビリティ設定に従います。本文は読みやすさを優先し、旧システムでは対応する標準表示になります。
+- `Bad Apple!!` は完全なオンラインページで開き、本文の黒幕アニメーション、音楽、一時停止、終了操作を保持します。オフライン本文の機能ではありません。
+- 簡体字中国語・英語・フランス語・日本語・韓国語・文言の6言語のアプリ表示。
+- アプリの表示言語と閲覧するウィキの言語は別々に設定できます。日本語の画面で中国語の記事も読めます。
+- ネイティブ検索、校内ナビゲーション、最近の更新、おまかせ記事。
+- `action=parse` による本文表示、目次、文字サイズ、共有、変更履歴へのリンク。
+- 記事の言語メニューは既存の言語間リンクを利用します。対応する記事がない場合、自動翻訳は行いません。
+- 保存した本文のオフライン閲覧と最大200件の閲覧履歴。画像・音声・動画には通信が必要です。
+- 提供された手書きロゴを描き直さず、白い正方形に配置したアプリアイコン。
+
+| ウィキ言語 | URL |
+| --- | --- |
+| 中文 | https://zh-wiki.tyzx.org |
+| English | https://en-wiki.tyzx.org |
+| Français | https://fr-wiki.tyzx.org |
+| 日本語 | https://ja-wiki.tyzx.org |
+| 한국어 | https://ko-wiki.tyzx.org |
+| 文言 | https://lzh-wiki.tyzx.org |
+
+言語版によって記事の数や内容は異なり、既存の言語間リンクでも未作成のページを指す場合があります。その場合は未作成の案内と、その言語版のメインページへの入口を表示します。翻訳文を自動生成しません。
+
+## 実行方法
+
+Swift 6.2 以上に対応する Xcode が必要です。最低対応 OS は iOS / iPadOS 17、開発検証には Xcode 27.2 を使用しています。
+
+**`TianyiWiki.xcodeproj`** を開き、**`TianyiWiki`** スキームを選択し、Swift Package の依存関係解決後に実行してください。実機では自分の Apple 開発チームを選び、必要に応じて `org.tyzx.TianyiWiki` を変更します。`Wikipedia.xcodeproj` は元の上流プロジェクトで、天一版の起動入口ではありません。
+
+```sh
+xcodebuild -project TianyiWiki.xcodeproj -scheme TianyiWiki \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' \
+  -derivedDataPath /tmp/tyzx-fork-build CODE_SIGNING_ALLOWED=NO build
+```
+
+## 開発状況と権利
+
+開発版であり、App Store には未公開です。ログイン・編集のネイティブ移植、通知、Wikimedia のおすすめ、端末間同期は未対応です。カテゴリ・特別ページは既存サイトを利用します。保存済み本文は古くなるため、手動更新が必要です。
+
+保存記事と履歴は端末内に保持します。Wikimedia の認証・解析・寄付サービスは初期化しませんが、天一サイトや外部メディアへの通信には各サービスのプライバシー方針が適用されます。
+
+元のコードと天一の追加コードは [MIT License](LICENSE.txt) に従い、© 2013–2025 Wikimedia Foundation et al. の表示を保持します。ブランド画像・記事・メディアの権利は個別で、コードのライセンスでは許可されません。公開には通報・モデレーション、プライバシー、必要なアカウント管理、実機テストと地域要件の整備が必要です。[App Store 評価](TianyiWiki/APP_STORE.md)は簡体字中国語です。ビルド成功は Apple の審査通過を保証しません。

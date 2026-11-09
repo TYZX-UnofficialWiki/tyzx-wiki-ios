@@ -1,0 +1,2 @@
+# Keep original upstream vector PDF bytes; do not diff or normalize them as text.
+*.pdf binary

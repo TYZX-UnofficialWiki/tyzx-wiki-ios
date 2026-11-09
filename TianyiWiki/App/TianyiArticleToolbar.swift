@@ -104,22 +104,16 @@ import WMFComponents
 
 /// Like upstream ArticleViewController, installs items on the navigation
 /// controller's own UIToolbar. No SwiftUI glass capsule or extra bottom inset.
-@MainActor final class TianyiReaderViewController<Content: View>: UIViewController, TianyiArticleToolbarHosting {
-    private let articleToolbar: TianyiArticleToolbarController
+@MainActor class TianyiHostingContainer<Content: View>: UIViewController {
     private let hosting: WMFComponentHostingController<Content>
-    init(rootView: Content, toolbar: TianyiArticleToolbarController) {
-        articleToolbar = toolbar
+    init(rootView: Content) {
         hosting = WMFComponentHostingController(rootView: rootView)
         super.init(nibName: nil, bundle: nil)
-        toolbar.owner = self
-        toolbarItems = toolbar.currentItems
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        // Keep UIKit in charge of toolbarItems; UIHostingController otherwise
-        // replaces them when its SwiftUI toolbar preferences change.
         addChild(hosting)
         hosting.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(hosting.view)
@@ -131,6 +125,17 @@ import WMFComponents
         ])
         hosting.didMove(toParent: self)
     }
+}
+
+@MainActor final class TianyiReaderViewController<Content: View>: TianyiHostingContainer<Content>, TianyiArticleToolbarHosting {
+    private let articleToolbar: TianyiArticleToolbarController
+    init(rootView: Content, toolbar: TianyiArticleToolbarController) {
+        articleToolbar = toolbar
+        super.init(rootView: rootView)
+        toolbar.owner = self
+        toolbarItems = toolbar.currentItems
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         toolbarItems = articleToolbar.currentItems

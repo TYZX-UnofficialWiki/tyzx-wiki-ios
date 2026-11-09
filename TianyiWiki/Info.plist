@@ -1,3 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict><key>CFBundleLocalizations</key><array><string>zh-Hans</string><string>en</string><string>fr</string><string>ja</string><string>ko</string><string>lzh</string></array><key>CFBundleDevelopmentRegion</key><string>zh-Hans</string></dict></plist>
+<plist version="1.0">
+<dict>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh-Hans</string>
+		<string>en</string>
+		<string>fr</string>
+		<string>ja</string>
+		<string>ko</string>
+		<string>lzh</string>
+	</array>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh-Hans</string>
+	<key>NSCameraUsageDescription</key>
+	<string>用于在你设置头像时拍摄选择上传的照片。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>用于选择你要上传为头像或维基文件的图片。</string>
+</dict>
+</plist>

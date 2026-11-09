@@ -16,6 +16,18 @@ Bad Apple!! utilise AVPlayer et une animation du texte pilotée par le temps nat
 
 Les commentaires conservent l’authentification et les autorisations du site. Sans zone de commentaires, l’app indique qu’ils sont désactivés, sans remplacer cette fonction par une discussion. Ils nécessitent Internet ; aucun commentaire de test n’a été publié. Les textes masqués se révèlent au toucher.
 
+## Onglets, compte et commentaires
+
+Les boutons du haut ouvrent les onglets d’articles et le compte. Création, sélection et fermeture sont possibles ; l’état de lecture est conservé pendant les changements et la liste des onglets survit au redémarrage.
+
+L’inscription, la connexion et la déconnexion utilisent les vrais formulaires du site dans l’application, avec consentement à la politique de confidentialité, vérification QQ et contrôles du serveur. Les liens ouvrant une nouvelle fenêtre conservent le formulaire initial. Le nom et l’avatar réels du compte sont affichés ; une icône système sert de repli. Profil, discussion, notifications, suivi, avatar et préférences utilisent le site.
+
+Le texte statique propose « Voir les commentaires » au lieu d’un chargement permanent. Le panneau réel partage la session des formulaires et des requêtes API natives, avec les droits du serveur. Le responsable a vérifié une connexion réelle, son avatar et le formulaire authentifié ; aucun commentaire ni compte de test n’a été créé.
+
+L’application ne lit ni n’enregistre les mots de passe ou codes QQ. Les cookies du site conservent la session. Les identifiants locaux et empreintes de session irréversibles isolent les caches par compte et du cache anonyme.
+
+<p><img src="TianyiWiki/Screenshots/article-tabs.png" width="240" alt="Article tabs"><img src="TianyiWiki/Screenshots/live-comments-from-article.png" width="240" alt="Live comments, anonymous permissions"></p>
+
 ## Interface iPad
 
 À partir d’iPadOS 18, l’accueil utilise les onglets flottants du système en haut de l’écran. Ils disparaissent pendant la lecture, avec une navigation de retour conservée, puis réapparaissent à l’accueil. Le lecteur prend en charge les deux orientations, les panneaux de sommaire et de langues et le partage. L’agrandissement du texte réorganise le contenu ; les infobox Tianyi et les légendes suivent le mode sombre. La détection des commentaires commence dès que le document est prêt, sans attendre les médias annexes.
@@ -58,7 +70,7 @@ xcodebuild -project TianyiWiki.xcodeproj -scheme TianyiWiki \
 
 ## État, confidentialité et licence
 
-Version de développement, non publiée sur l’App Store. La connexion et l’édition natives, les notifications, les recommandations Wikimedia et la synchronisation ne sont pas portées. Les catégories et pages spéciales utilisent le site existant. Le texte enregistré peut être ancien et doit être actualisé manuellement.
+Version de développement, non publiée sur l’App Store. L’inscription et la connexion utilisent les formulaires intégrés du site. L’édition native, les notifications, les recommandations Wikimedia et la synchronisation ne sont pas portées. Les catégories et pages spéciales utilisent le site existant. Le texte enregistré peut être ancien et doit être actualisé manuellement.
 
 Les favoris et l’historique restent sur l’appareil. Le client n’initialise pas les services de connexion, statistiques ou dons de Wikimedia. Les requêtes vers Tianyi et les fournisseurs de médias restent soumises à leurs pratiques de confidentialité.
 

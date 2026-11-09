@@ -18,6 +18,18 @@ Bad Apple!! uses AVPlayer with cached audio and app-controlled text animation dr
 
 Comments retain the site’s authentication and permissions. Pages without a comment region show “Comments are disabled for this article”; discussion pages are not substituted. Comments need a connection. No live test comments were posted. Text spoilers support touch-to-reveal.
 
+## Article tabs, accounts and live comments
+
+Top controls now open article tabs and the account menu. Create, switch and close tabs; live reader state is retained while switching, and tab titles/history survive app restarts.
+
+Registration, login and logout use Tianyi Wiki’s own forms inside the app, preserving privacy-policy consent, QQ verification and other server checks. New-window policy links open separately without losing the registration form. Signed-in users see their site username and actual avatar, with a system icon as fallback. User/talk pages, notifications, watchlist, avatar management and preferences remain website-backed.
+
+The static article’s comments placeholder is replaced with “View comments”, opening the real comments panel. Web forms, comments and native API requests share the site session and its permissions. The maintainer personally verified login, the real avatar and the authenticated composer; no production comment or test account was created.
+
+The app does not read or log passwords or QQ codes. Website/system cookie storage holds the session. Local account IDs and one-way session fingerprints separate authenticated and anonymous article caches; another account’s cached text is not reused.
+
+<p><img src="TianyiWiki/Screenshots/article-tabs.png" width="240" alt="Article tabs"><img src="TianyiWiki/Screenshots/live-comments-from-article.png" width="240" alt="Live comments, anonymous permissions"></p>
+
 ## iPad layout
 
 On iPadOS 18 and later, the home screen uses the system floating top tabs. Opening an article hides the tabs while keeping back navigation; returning home restores them. The reader supports both orientations, contents and language sheets, and a share popover. Larger text reflows the article, and Tianyi infoboxes and captions follow Dark Mode. Comment detection starts when the document is ready, without waiting for unrelated media.
@@ -51,7 +63,7 @@ Article coverage differs between sites. Some existing interlanguage links point 
 - Local bookmarks, up to 200 history entries, and data-clearing controls.
 - An app icon composed from the maintainer-supplied wordmark on an opaque white square, preserving the original lettering.
 
-This is a development version and has not been published on the App Store. Native login, registration, and editing have not been ported; category and special pages use the existing website for compatibility. Push notifications, Wikimedia recommendations, donations, Wikidata description editing, and cross-device sync are not integrated. The interface supports Simplified Chinese, English, French, Japanese, Korean, and Literary Chinese. Interface and wiki languages are selected independently. The article language menu opens existing interlanguage-linked versions; it does not automatically translate missing articles.
+This is a development version and has not been published on the App Store. Login and registration now use in-app website flows; native editing has not been ported; category and special pages use the existing website for compatibility. Push notifications, Wikimedia recommendations, donations, Wikidata description editing, and cross-device sync are not integrated. The interface supports Simplified Chinese, English, French, Japanese, Korean, and Literary Chinese. Interface and wiki languages are selected independently. The article language menu opens existing interlanguage-linked versions; it does not automatically translate missing articles.
 
 ## Run the Tianyi client
 

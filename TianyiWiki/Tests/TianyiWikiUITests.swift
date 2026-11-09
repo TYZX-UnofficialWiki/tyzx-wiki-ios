@@ -257,6 +257,78 @@ final class TianyiWikiUITests: XCTestCase {
         XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 5))
         XCTAssertTrue(tab(app, "搜索").isHittable, "Returning home must restore the iPad tabs")
     }
+    @MainActor func testAccountWebsiteLoginAndRegistration() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-AppleLanguages", "(zh-Hans)"]
+        app.launch()
+        XCTAssertTrue(app.buttons["account-button"].waitForExistence(timeout: 10))
+        app.buttons["account-button"].tap()
+        XCTAssertTrue(app.buttons["account-login"].waitForExistence(timeout: 10))
+        app.buttons["account-login"].tap()
+        XCTAssertTrue(app.webViews.secureTextFields.firstMatch.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.webViews.textFields.firstMatch.exists)
+        attach(app, "website-login")
+        app.buttons["web-flow-done-login"].tap()
+        XCTAssertTrue(app.webViews.secureTextFields.firstMatch.waitForNonExistence(timeout: 10))
+        app.buttons["account-register"].tap()
+        XCTAssertTrue(app.webViews.staticTexts["注册前请阅读隐私政策"].firstMatch.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.webViews.staticTexts["我已阅读并理解隐私政策"].firstMatch.exists)
+        attach(app, "website-registration-privacy")
+        let policy = app.webViews.links["打开并阅读隐私政策"].firstMatch
+        XCTAssertTrue(policy.exists); policy.tap()
+        XCTAssertTrue(app.webViews.staticTexts["隐私政策"].firstMatch.waitForExistence(timeout: 30))
+        app.buttons["web-flow-done-page"].tap()
+        XCTAssertTrue(app.webViews.staticTexts["注册前请阅读隐私政策"].firstMatch.waitForExistence(timeout: 10))
+        // Consent, real credentials and QQ verification are completed by the account owner.
+    }
+    @MainActor func testArticleTabsSwitchPersistAndClose() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        let arguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh"]
+        app.launchArguments = arguments + ["-TianyiResetTabs"]
+        app.launch()
+        app.buttons["开始阅读"].tap()
+        XCTAssertTrue(app.navigationBars["江苏省天一中学"].waitForExistence(timeout: 10))
+        app.buttons["article-tabs-button"].tap()
+        app.buttons["新建标签页"].tap()
+        let search = app.textFields["tianyi-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap(); search.typeText("Bad Apple!!")
+        let result = app.staticTexts["Bad Apple!!"].firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 30)); result.tap()
+        app.buttons["article-tabs-button"].tap()
+        let cards = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'article-tab-'"))
+        XCTAssertEqual(cards.count, 2)
+        attach(app, "article-tabs")
+        cards.element(boundBy: 0).tap()
+        XCTAssertTrue(app.navigationBars["江苏省天一中学"].waitForExistence(timeout: 10))
+        app.launchArguments = arguments
+        app.terminate(); app.launch()
+        app.buttons["article-tabs-button"].tap()
+        XCTAssertEqual(cards.count, 2)
+        cards.element(boundBy: 1).tap()
+        XCTAssertTrue(app.navigationBars["Bad Apple!!"].waitForExistence(timeout: 10))
+        app.buttons["article-tabs-button"].tap()
+        app.buttons["关闭标签页 江苏省天一中学"].tap()
+        XCTAssertEqual(cards.count, 1)
+        app.buttons["关闭标签页 Bad Apple!!"].tap()
+        XCTAssertTrue(app.staticTexts["暂无标签页"].waitForExistence(timeout: 5))
+    }
+    @MainActor func testInlineCommentsOpenLivePanel() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh"]
+        app.launch(); app.buttons["开始阅读"].tap()
+        let entry = app.webViews.buttons["查看评论"].firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: 30))
+        XCTAssertFalse(app.webViews.staticTexts["Loading comments..."].exists)
+        entry.tap()
+        XCTAssertTrue(app.buttons["登录"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.webViews.staticTexts["您未被允许发表评论。"].firstMatch.waitForExistence(timeout: 30))
+        XCTAssertFalse(app.webViews.staticTexts["Loading comments..."].exists)
+        attach(app, "live-comments-from-article")
+    }
     @MainActor private func tab(_ app: XCUIApplication, _ title: String) -> XCUIElement {
         let bottom = app.tabBars.buttons[title]
         if bottom.exists { return bottom }

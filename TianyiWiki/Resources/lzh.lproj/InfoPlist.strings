@@ -1,1 +1,3 @@
 "CFBundleDisplayName" = "天一維基";
+"NSCameraUsageDescription" = "君設肖像時，攝君欲上傳之照。";
+"NSPhotoLibraryUsageDescription" = "選君欲上傳作肖像或維基檔之圖。";

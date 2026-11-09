@@ -54,12 +54,12 @@ struct TianyiExploreView: View {
         loading = true; error = nil
         if let data = UserDefaults.standard.data(forKey: "recent-" + site.rawValue), let saved = try? JSONDecoder().decode([WMFTianyiChange].self, from: data) { recent = saved }
         defer { if !Task.isCancelled { loading = false } }
-        do { let changes = try await WMFTianyiDataController.shared.recent(site: site); try Task.checkCancellation(); recent = changes; if let data = try? JSONEncoder().encode(changes) { UserDefaults.standard.set(data, forKey: "recent-" + site.rawValue) } }
+        do { await TianyiSession.shared.synchronizeCookies(); let changes = try await WMFTianyiDataController.shared.recent(site: site); try Task.checkCancellation(); recent = changes; if let data = try? JSONEncoder().encode(changes) { UserDefaults.standard.set(data, forKey: "recent-" + site.rawValue) } }
         catch { if !Task.isCancelled { self.error = tianyiErrorDescription(error) } }
     }
     private func random() async {
         randomLoading = true; defer { randomLoading = false }
-        do { open(WMFTianyiPage(title: try await WMFTianyiDataController.shared.random(site: site), site: site)) }
+        do { await TianyiSession.shared.synchronizeCookies(); open(WMFTianyiPage(title: try await WMFTianyiDataController.shared.random(site: site), site: site)) }
         catch { self.error = tianyiErrorDescription(error) }
     }
 }
@@ -103,6 +103,7 @@ struct TianyiSearchView: View {
             loading = true
             do {
                 try await Task.sleep(for: .milliseconds(350))
+                await TianyiSession.shared.synchronizeCookies()
                 let result = try await WMFTianyiDataController.shared.search(query, site: site)
                 try Task.checkCancellation(); hits = result; completed = true; loading = false
             } catch { if !Task.isCancelled { self.error = tianyiErrorDescription(error); loading = false } }

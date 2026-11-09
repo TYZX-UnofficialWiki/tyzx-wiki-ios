@@ -1,1 +1,3 @@
 "CFBundleDisplayName" = "Tianyi Wiki";
+"NSCameraUsageDescription" = "Take a photo when you choose to upload an avatar.";
+"NSPhotoLibraryUsageDescription" = "Choose an image to upload as your avatar or a wiki file.";

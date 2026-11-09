@@ -1,1 +1,3 @@
 "CFBundleDisplayName" = "톈이 위키";
+"NSCameraUsageDescription" = "프로필 사진을 올릴 때 사용자가 선택한 사진을 촬영합니다.";
+"NSPhotoLibraryUsageDescription" = "프로필 사진이나 위키 파일로 올릴 이미지를 선택합니다.";

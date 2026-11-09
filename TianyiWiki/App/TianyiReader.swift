@@ -9,29 +9,45 @@ import WMFComponents
     @Published var offline = false
     @Published var error: String?
     let page: WMFTianyiPage
+    private(set) var cacheIdentity = ""
     init(page: WMFTianyiPage) { self.page = page }
     func load(library: TianyiLibrary) async {
+        await library.prepareSession()
+        let scope = library.cacheIdentity(for: page)
+        if cacheIdentity != scope { article = nil; error = nil; offline = false; cacheIdentity = scope }
+        guard article == nil else { return }
         loading = true; error = nil; offline = false
         defer { loading = false }
         // Show explicitly saved content immediately, including without a network.
-        if let cached = try? await library.cache.load(page) {
+        if let cached = await library.cachedArticle(for: page) {
+            guard !Task.isCancelled, scope == library.cacheIdentity(for: page) else { return }
             article = cached; offline = true
             library.visit(page)
             return
         }
         do {
             let result = try await WMFTianyiDataController.shared.article(page)
-            try Task.checkCancellation(); article = result
+            try Task.checkCancellation()
+            guard scope == library.cacheIdentity(for: page) else { return }
+            if library.contains(page) { try await library.cache(for: page).save(result, for: page) }
+            try Task.checkCancellation()
+            guard scope == library.cacheIdentity(for: page) else { return }
+            article = result
             library.visit(page)
         } catch { if !Task.isCancelled { self.error = tianyiErrorDescription(error) } }
     }
     func refresh(library: TianyiLibrary) async {
+        await library.prepareSession()
+        let scope = library.cacheIdentity(for: page)
         loading = true; error = nil
         defer { loading = false }
         do {
             let result = try await WMFTianyiDataController.shared.article(page)
             try Task.checkCancellation()
-            if library.contains(page) { try await library.cache.save(result, for: page) }
+            guard scope == library.cacheIdentity(for: page) else { return }
+            if library.contains(page) { try await library.cache(for: page).save(result, for: page) }
+            try Task.checkCancellation()
+            guard scope == library.cacheIdentity(for: page) else { return }
             article = result; offline = false
         } catch { if !Task.isCancelled { self.error = tianyiErrorDescription(error) } }
     }
@@ -44,6 +60,7 @@ struct TianyiReaderView: View {
     let open: @MainActor @Sendable (WMFTianyiPage) -> Void
     @StateObject private var model: TianyiArticleViewModel
     @EnvironmentObject private var library: TianyiLibrary
+    @EnvironmentObject private var session: TianyiSession
     @Environment(\.openURL) private var openURL
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("readerZoom") private var zoom = 1.0
@@ -54,6 +71,9 @@ struct TianyiReaderView: View {
     @State private var findRequest: UUID?
     @State private var saving = false
     @State private var showComments = false
+    @State private var showCommentAccount = false
+    @State private var commentFlow: TianyiWebRequest?
+    @StateObject private var commentNavigation = TianyiWebNavigation()
     @State private var commentsAvailable: Bool?
     @StateObject private var badApple = TianyiBadApplePlayer()
     @Environment(\.scenePhase) private var scenePhase
@@ -63,7 +83,7 @@ struct TianyiReaderView: View {
         _model = StateObject(wrappedValue: TianyiArticleViewModel(page: page))
     }
     private var toolbarState: TianyiArticleToolbarController.State {
-        .init(available: model.article != nil, hasContents: model.article?.sections.isEmpty == false, saved: library.contains(page), saving: saving)
+        .init(available: model.article != nil && model.cacheIdentity == library.cacheIdentity(for: page), hasContents: model.article?.sections.isEmpty == false, saved: library.contains(page), saving: saving)
     }
     var body: some View {
         VStack(spacing: 0) {
@@ -87,8 +107,8 @@ struct TianyiReaderView: View {
                 if let error = badApple.error { Text(error).font(.caption); Button(t("重试")) { Task { await badApple.prepare() } } }
                 if !badApple.ready { Button(t("缓存彩蛋供离线播放")) { Task { await badApple.prepare() } } }
             }
-            if let article = model.article {
-                TianyiArticleWebView(article: article, page: page, zoom: zoom, dark: colorScheme == .dark, anchor: anchor, scrollRequest: scrollRequest, findRequest: findRequest, frames: badApple.frames, playbackTime: badApple.time, animating: badApple.playing, open: open)
+            if let article = model.article, model.cacheIdentity == library.cacheIdentity(for: page) {
+                TianyiArticleWebView(article: article, page: page, zoom: zoom, dark: colorScheme == .dark, anchor: anchor, scrollRequest: scrollRequest, findRequest: findRequest, frames: badApple.frames, playbackTime: badApple.time, animating: badApple.playing, open: open, showComments: { commentsAvailable = nil; showComments = true })
             } else if !model.loading && model.error == nil {
                 ContentUnavailableView(t("正在准备词条"), systemImage: "book")
             }
@@ -99,7 +119,7 @@ struct TianyiReaderView: View {
             case .languages: showLanguages = true
             case .save:
                 saving = true
-                Task { await library.toggle(page, article: model.article); saving = false }
+                Task { await library.toggle(page, article: model.article, expectedScope: model.cacheIdentity); saving = false }
             case .find: findRequest = UUID()
             case .larger: zoom = min(1.8, zoom + 0.1)
             case .smaller: zoom = max(0.8, zoom - 0.1)
@@ -148,21 +168,33 @@ struct TianyiReaderView: View {
                 HStack {
                     Text(t("评论与讨论")).font(.headline)
                     Spacer()
+                    Button(t(session.users[page.site] == nil ? "登录" : "账号")) { showCommentAccount = true }
                     Button(t("完成")) { showComments = false }
                 }.padding()
                 if commentsAvailable == false {
                     ContentUnavailableView(t("此词条关闭了评论功能"), systemImage: "text.bubble")
                 } else {
-                    TianyiSiteView(url: page.url, commentsOnly: true, onCommentsAvailable: { commentsAvailable = $0 })
+                    TianyiSiteView(url: page.url, commentsOnly: true, onCommentsAvailable: { commentsAvailable = $0 }, navigation: commentNavigation,
+                        onOpenWikiURL: { commentFlow = TianyiWebRequest(url: $0, title: t("网页")) })
+                        .id(session.revision)
                         .opacity(commentsAvailable == true ? 1 : 0)
-                        .overlay { if commentsAvailable == nil { ProgressView().accessibilityIdentifier("comments-loading") } }
+                        .overlay {
+                            if let error = commentNavigation.error {
+                                VStack { Text(error); Button(t("重试")) { commentNavigation.error = nil; commentNavigation.web?.reload() } }.padding()
+                            } else if commentsAvailable == nil { ProgressView().accessibilityIdentifier("comments-loading") }
+                        }
                 }
             }
+            .onChange(of: session.revision) { _, _ in commentsAvailable = nil }
+            .sheet(isPresented: $showCommentAccount) {
+                TianyiAccountView(site: page.site, session: session) { showCommentAccount = false }
+            }
+            .sheet(item: $commentFlow) { request in TianyiWebFlow(request: request, site: page.site, session: session) }
         }
-        .task {
+        .task(id: session.revision) {
             await model.load(library: library)
             if isBadApple, let article = model.article {
-                do { try await library.cache.save(article, for: page) } catch { library.storageError = error.localizedDescription }
+                do { try await library.cache(for: page).save(article, for: page) } catch { library.storageError = error.localizedDescription }
             }
         }
         .task { if isBadApple { await badApple.prepare() } }
@@ -189,13 +221,15 @@ struct TianyiArticleWebView: UIViewRepresentable {
     var playbackTime: Double = 0
     var animating: Bool = false
     let open: @MainActor @Sendable (WMFTianyiPage) -> Void
+    let showComments: @MainActor () -> Void
     @Environment(\.openURL) private var openURL
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = false
         config.websiteDataStore = .nonPersistent()
-        config.userContentController.addUserScript(WKUserScript(source: Self.interactions, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        config.userContentController.add(context.coordinator, name: "articleComments")
+        config.userContentController.addUserScript(WKUserScript(source: Self.interactions + commentsBridge, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = context.coordinator
         web.isFindInteractionEnabled = true
@@ -232,6 +266,22 @@ struct TianyiArticleWebView: UIViewRepresentable {
             }
         }
     }
+    static func dismantleUIView(_ web: WKWebView, coordinator: Coordinator) {
+        web.configuration.userContentController.removeScriptMessageHandler(forName: "articleComments")
+        web.stopLoading(); web.navigationDelegate = nil
+    }
+    private var commentsBridge: String {
+        let label = String(data: try! JSONEncoder().encode(t("查看评论")), encoding: .utf8)!
+        return """
+        document.querySelectorAll('.tyzx-comments,#comments,.comments-block').forEach(region => {
+          const heading = document.createElement('h2'); heading.textContent = \(String(data: try! JSONEncoder().encode(t("访客评论")), encoding: .utf8)!);
+          const button = document.createElement('button'); button.type = 'button'; button.className = 'tianyi-open-comments'; button.textContent = \(label);
+          button.style.cssText = 'font:inherit;border:0;border-radius:12px;padding:10px 18px;background:#36c;color:white';
+          button.addEventListener('click', () => window.webkit.messageHandlers.articleComments.postMessage(true));
+          region.replaceChildren(heading, button);
+        });
+        """
+    }
     static let interactions = """
     document.addEventListener('click', e=>{let n=e.target.closest('.heimu,.tyzx-black-curtain,.spoiler');if(n)n.classList.toggle('revealed')});
     window.baDraw=(time,active)=>{
@@ -255,7 +305,7 @@ struct TianyiArticleWebView: UIViewRepresentable {
         </head><body>\(article.text)<footer>\(t("来源"))：\(t("天一维基")) · \(t("修订")) \(article.revid)<br>\(t("正文及媒体许可请查看")) <a href="\(canonical)">\(t("原页面"))</a> \(t("与页面修订历史；保留原作者署名与引用。"))</footer></body></html>
         """
     }
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: TianyiArticleWebView
         var textSize: Double?
         var lastTime = -1.0
@@ -265,6 +315,10 @@ struct TianyiArticleWebView: UIViewRepresentable {
         var scrollRequest: UUID?
         var findRequest: UUID?
         init(_ parent: TianyiArticleWebView) { self.parent = parent }
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard message.name == "articleComments", message.frameInfo.isMainFrame else { return }
+            parent.showComments()
+        }
         func applyTextSize(_ web: WKWebView) {
             web.evaluateJavaScript("document.body.style.fontSize='\(17 * parent.zoom)px'", completionHandler: nil)
         }
@@ -281,7 +335,7 @@ struct TianyiArticleWebView: UIViewRepresentable {
                 let action = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "action" }?.value
                 if action == nil || action == "view" { parent.open(WMFTianyiPage(title: title, site: site)) }
                 else { parent.openURL(url) }
-            } else if ["https", "http", "mailto", "tel"].contains(url.scheme?.lowercased() ?? "") { parent.openURL(url) }
+            } else if ["https", "http", "mailto", "tel", "mqq", "mqqapi"].contains(url.scheme?.lowercased() ?? "") { parent.openURL(url) }
             return .cancel
         }
     }
@@ -292,11 +346,16 @@ struct TianyiSiteView: UIViewRepresentable {
     let url: URL
     var commentsOnly = false
     var onCommentsAvailable: (@MainActor (Bool) -> Void)?
+    var navigation: TianyiWebNavigation? = nil
+    var onOpenNewWindow: (@MainActor (URL) -> Void)? = nil
+    var onOpenWikiURL: (@MainActor (URL) -> Void)? = nil
+    var onPageLoaded: (@MainActor () -> Void)? = nil
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        config.websiteDataStore = .default()
         if commentsOnly {
             config.userContentController.add(context.coordinator, name: "commentStatus")
             // DOM readiness must not wait for unrelated images, audio or animation downloads.
@@ -310,7 +369,10 @@ struct TianyiSiteView: UIViewRepresentable {
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = context.coordinator
         config.userContentController.addUserScript(WKUserScript(source: Self.cleanPage, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
-        web.allowsBackForwardNavigationGestures = true; web.load(URLRequest(url: url))
+        web.uiDelegate = context.coordinator
+        context.coordinator.requestedURL = url
+        context.coordinator.observe(web)
+        web.allowsBackForwardNavigationGestures = true; web.load(URLRequest(url: url, timeoutInterval: 30))
         return web
     }
     static let detectComments = """
@@ -347,16 +409,31 @@ struct TianyiSiteView: UIViewRepresentable {
     """
     func updateUIView(_ uiView: WKWebView, context: Context) {
         context.coordinator.parent = self
+        if context.coordinator.requestedURL != url {
+            context.coordinator.requestedURL = url
+            navigation?.error = nil
+            uiView.load(URLRequest(url: url, timeoutInterval: 30))
+        }
         context.coordinator.applyTheme(uiView)
     }
     static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
         uiView.configuration.userContentController.removeScriptMessageHandler(forName: "commentStatus")
         uiView.stopLoading()
         uiView.evaluateJavaScript("document.querySelectorAll('audio,video').forEach(media => media.pause())", completionHandler: nil)
-        uiView.navigationDelegate = nil
+        uiView.navigationDelegate = nil; uiView.uiDelegate = nil
+        coordinator.observations.removeAll()
         uiView.loadHTMLString("", baseURL: nil)
     }
-    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
+        var requestedURL: URL?
+        var observations: [NSKeyValueObservation] = []
+        func observe(_ web: WKWebView) {
+            for key in [\WKWebView.isLoading, \WKWebView.canGoBack] {
+                observations.append(web.observe(key, options: [.initial, .new]) { [weak self] web, _ in
+                    Task { @MainActor in self?.parent.navigation?.update(web) }
+                })
+            }
+        }
         var parent: TianyiSiteView
         init(_ parent: TianyiSiteView) { self.parent = parent }
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -369,13 +446,35 @@ struct TianyiSiteView: UIViewRepresentable {
         }
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             applyTheme(webView)
+            parent.navigation?.update(webView)
+            parent.onPageLoaded?()
+        }
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failed(webView, error) }
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { failed(webView, error) }
+        private func failed(_ web: WKWebView, _ error: Error) {
+            guard (error as NSError).code != NSURLErrorCancelled else { return }
+            parent.navigation?.loading = false
+            parent.navigation?.error = t("加载失败，请检查网络后重试。")
+        }
+        func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+            guard let url = action.request.url else { return nil }
+            if WMFTianyiSite.matching(url) != nil {
+                if let open = parent.onOpenNewWindow { open(url) } else { webView.load(action.request) }
+            }
+            return nil
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
             guard let url = action.request.url else { return .cancel }
             if action.targetFrame?.isMainFrame == false { return .allow }
-            if WMFTianyiSite.matching(url) != nil { return .allow }
-            if ["https", "http", "mailto", "tel"].contains(url.scheme?.lowercased() ?? "") { parent.openURL(url) }
+            if let site = WMFTianyiSite.matching(url) {
+                if parent.commentsOnly && action.navigationType == .linkActivated,
+                   site.title(in: url) != site.title(in: parent.url), let open = parent.onOpenWikiURL {
+                    open(url); return .cancel
+                }
+                return .allow
+            }
+            if ["https", "http", "mailto", "tel", "mqq", "mqqapi"].contains(url.scheme?.lowercased() ?? "") { parent.openURL(url) }
             return .cancel
         }
     }

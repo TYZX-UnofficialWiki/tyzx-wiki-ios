@@ -1,1 +1,3 @@
 "CFBundleDisplayName" = "Wiki Tianyi";
+"NSCameraUsageDescription" = "Prendre une photo lorsque vous choisissez de modifier votre avatar.";
+"NSPhotoLibraryUsageDescription" = "Choisir une image à téléverser comme avatar ou fichier du wiki.";

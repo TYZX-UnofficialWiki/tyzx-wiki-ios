@@ -161,6 +161,8 @@ struct TianyiReaderView: View {
                     ContentUnavailableView(t("此词条关闭了评论功能"), systemImage: "text.bubble")
                 } else {
                     TianyiSiteView(url: page.url, commentsOnly: true, onCommentsAvailable: { commentsAvailable = $0 })
+                        .opacity(commentsAvailable == true ? 1 : 0)
+                        .overlay { if commentsAvailable == nil { ProgressView().accessibilityIdentifier("comments-loading") } }
                 }
             }
         }
@@ -207,7 +209,10 @@ struct TianyiArticleWebView: UIViewRepresentable {
     }
     func updateUIView(_ web: WKWebView, context: Context) {
         context.coordinator.parent = self
-        web.pageZoom = zoom
+        if context.coordinator.textSize != zoom {
+            context.coordinator.textSize = zoom
+            context.coordinator.applyTextSize(web)
+        }
         let identity = "\(page.id):\(article.revid):\(dark)"
         if context.coordinator.identity != identity {
             context.coordinator.identity = identity
@@ -246,20 +251,27 @@ struct TianyiArticleWebView: UIViewRepresentable {
         return """
         <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src https: data:; style-src 'unsafe-inline' https:; media-src https:; script-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
-        <style>:root{color-scheme:\(dark ? "dark" : "light")}body{font:17px/1.8 -apple-system,BlinkMacSystemFont,sans-serif;margin:0 auto;padding:20px;max-width:760px;color:\(foreground);background:\(background);overflow-wrap:anywhere}a{color:\(dark ? "#88a3e8" : "#36c")}img,video{max-width:100%;height:auto}table{max-width:100%;display:block;overflow-x:auto;border-collapse:collapse}td,th{padding:6px;border:1px solid #8884}.infobox{float:none!important;width:100%!important;box-sizing:border-box}.mw-editsection,.mw-empty-elt{display:none}h1,h2,h3{line-height:1.4}.mw-heading{margin-top:1.5em}blockquote{margin:1em 0;padding-left:1em;border-left:3px solid #8884}footer{font-size:13px;border-top:1px solid #8884;margin-top:30px;padding-top:16px;color:#72777d} :root{--color-base:\(foreground);--color-subtle:\(dark ? "#b8bec7" : "#54595d");--background-color-base:\(background);--background-color-neutral-subtle:\(dark ? "#20252b" : "#f8f9fa");--color-progressive:#88a3e8}\(dark ? ".mw-parser-output [style*=background],.infobox,.infobox th,.infobox td,.thumbinner,figcaption,.thumbcaption{background-color:#20252b!important;color:#e7e9ed!important}" : "") .heimu,.tyzx-black-curtain,.spoiler,.ba-black{background:#000!important;color:#000!important}.heimu:hover,.tyzx-black-curtain:hover,.revealed,.ba-black:hover{color:#fff!important}
+        <style>:root{color-scheme:\(dark ? "dark" : "light")}body{font:\(17 * zoom)px/1.8 -apple-system,BlinkMacSystemFont,sans-serif;margin:0 auto;padding:20px;max-width:760px;color:\(foreground);background:\(background);overflow-wrap:anywhere}a{color:\(dark ? "#88a3e8" : "#36c")}img,video{max-width:100%;height:auto}table{max-width:100%;display:block;overflow-x:auto;border-collapse:collapse}td,th{padding:6px;border:1px solid #8884}.infobox{float:none!important;width:100%!important;box-sizing:border-box}.mw-editsection,.mw-empty-elt{display:none}h1,h2,h3{line-height:1.4}.mw-heading{margin-top:1.5em}blockquote{margin:1em 0;padding-left:1em;border-left:3px solid #8884}footer{font-size:13px;border-top:1px solid #8884;margin-top:30px;padding-top:16px;color:#72777d} :root{--color-base:\(foreground);--color-subtle:\(dark ? "#b8bec7" : "#54595d");--background-color-base:\(background);--background-color-neutral-subtle:\(dark ? "#20252b" : "#f8f9fa");--color-progressive:#88a3e8}\(dark ? ".mw-parser-output [style*=background],.infobox,.infobox th,.infobox td,.mw-parser-output .tyzx-infobox,.mw-parser-output .tyzx-infobox th,.mw-parser-output .tyzx-infobox td,.thumbinner,figure,figcaption,.thumbcaption{background-color:#20252b!important;color:#e7e9ed!important}" : "") .heimu,.tyzx-black-curtain,.spoiler,.ba-black{background:#000!important;color:#000!important}.heimu:hover,.tyzx-black-curtain:hover,.revealed,.ba-black:hover{color:#fff!important}
         </style>
         </head><body>\(article.text)<footer>\(t("来源"))：\(t("天一维基")) · \(t("修订")) \(article.revid)<br>\(t("正文及媒体许可请查看")) <a href="\(canonical)">\(t("原页面"))</a> \(t("与页面修订历史；保留原作者署名与引用。"))</footer></body></html>
         """
     }
     final class Coordinator: NSObject, WKNavigationDelegate {
         var parent: TianyiArticleWebView
+        var textSize: Double?
         var lastTime = -1.0
         var lastActive = false
         var frames: String?
         var identity = ""
         var scrollRequest: UUID?
         init(_ parent: TianyiArticleWebView) { self.parent = parent }
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { frames = nil }
+        func applyTextSize(_ web: WKWebView) {
+            web.evaluateJavaScript("document.body.style.fontSize='\(17 * parent.zoom)px'", completionHandler: nil)
+        }
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            frames = nil
+            applyTextSize(webView)
+        }
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
             guard action.navigationType == .linkActivated, let url = action.request.url else { return .allow }
             if let fragment = url.fragment, !fragment.isEmpty,
@@ -285,7 +297,11 @@ struct TianyiSiteView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
-        if commentsOnly { config.userContentController.add(context.coordinator, name: "commentStatus") }
+        if commentsOnly {
+            config.userContentController.add(context.coordinator, name: "commentStatus")
+            // DOM readiness must not wait for unrelated images, audio or animation downloads.
+            config.userContentController.addUserScript(WKUserScript(source: Self.detectComments, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        }
         config.defaultWebpagePreferences.allowsContentJavaScript = true
         config.allowsInlineMediaPlayback = true
         // The site's play control supplies the user gesture for sound; retain WebKit's
@@ -297,6 +313,35 @@ struct TianyiSiteView: UIViewRepresentable {
         web.allowsBackForwardNavigationGestures = true; web.load(URLRequest(url: url))
         return web
     }
+    static let detectComments = """
+    (() => {
+      let done = false;
+      const check = () => {
+        const region = document.querySelector('.tyzx-comments,#comments,#comment-form,.comment-form,.comments-block');
+        if (!region || done) return false;
+        done = true;
+        region.setAttribute('data-tianyi-comments-root', '');
+        for (let node = region; node && node !== document.body; node = node.parentElement) {
+          node.setAttribute('data-tianyi-comments-path', '');
+        }
+        // Keep the original DOM ancestry and event handlers used by MediaWiki's forms.
+        const style = document.createElement('style');
+        style.textContent = `body.tianyi-comments-only :not([data-tianyi-comments-path]):not([data-tianyi-comments-root] *):not(.oo-ui-windowManager):not(.oo-ui-windowManager *):not(dialog):not(dialog *){display:none!important}
+          [data-tianyi-comments-path]{min-height:0!important;margin-top:0!important;padding-top:0!important}
+          [data-tianyi-comments-root]{display:block!important;padding:16px!important}`;
+        document.head.appendChild(style);
+        document.body.classList.add('tianyi-comments-only');
+        window.scrollTo(0, 0);
+        window.webkit.messageHandlers.commentStatus.postMessage(true);
+        return true;
+      };
+      if (!check()) {
+        const observer = new MutationObserver(() => { if (check()) observer.disconnect(); });
+        observer.observe(document.body, {childList:true, subtree:true});
+        setTimeout(() => { observer.disconnect(); if (!done) window.webkit.messageHandlers.commentStatus.postMessage(false); }, 2500);
+      }
+    })();
+    """
     static let cleanPage = """
     let style=document.createElement('style');style.textContent='#siteNotice,#centralNotice,.header-container,.mw-footer,.vector-header-container,.vector-column-start,.vector-column-end,.vector-page-toolbar,.minerva-page-actions,.tyzx-announcement-carousel,.tyzx-announcements{display:none!important}body{padding:0!important}';document.head.append(style);
     """
@@ -324,12 +369,8 @@ struct TianyiSiteView: UIViewRepresentable {
         }
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             applyTheme(webView)
-            if parent.commentsOnly {
-                webView.evaluateJavaScript("""
-                (()=>{let done=false;const check=()=>{const n=document.querySelector('.tyzx-comments,#comments,#comment-form,.comment-form,.comments-block');if(n&&!done){done=true;window.webkit.messageHandlers.commentStatus.postMessage(true);n.scrollIntoView();return true}return false};if(!check()){let o=new MutationObserver(()=>{if(check())o.disconnect()});o.observe(document.body,{childList:true,subtree:true});setTimeout(()=>{o.disconnect();if(!done)window.webkit.messageHandlers.commentStatus.postMessage(false)},2500)}})()
-                """, completionHandler:nil)
-            }
         }
+
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
             guard let url = action.request.url else { return .cancel }
             if action.targetFrame?.isMainFrame == false { return .allow }

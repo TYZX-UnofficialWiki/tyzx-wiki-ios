@@ -61,7 +61,7 @@ struct TianyiContainer: UIViewControllerRepresentable {
     func makeCoordinator() -> TianyiCoordinator { TianyiCoordinator() }
 }
 
-@MainActor final class TianyiCoordinator: NSObject, UITabBarControllerDelegate {
+@MainActor final class TianyiCoordinator: NSObject, UITabBarControllerDelegate, UINavigationControllerDelegate {
     let library = TianyiLibrary()
     private var navigationControllers: [WMFComponentNavigationController] = []
     private weak var tabController: UITabBarController?
@@ -84,6 +84,7 @@ struct TianyiContainer: UIViewControllerRepresentable {
             let host = WMFComponentHostingController(rootView: view.environmentObject(library))
             host.navigationItem.title = title == t("探索") ? t("天一维基") : title
             let nav = WMFComponentNavigationController(rootViewController: host, modalPresentationStyle: .fullScreen)
+            nav.delegate = self
             nav.navigationBar.prefersLargeTitles = true
             nav.tabBarItem = UITabBarItem(title: title, image: UIImage(systemName: symbol), selectedImage: nil)
             return nav
@@ -100,6 +101,18 @@ struct TianyiContainer: UIViewControllerRepresentable {
         else { tab.selectedIndex = selectedIndex }
         tab.delegate = self
         return tab
+    }
+    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+        updateIPadTabs(navigationController, showing: viewController)
+    }
+    func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+        // Also restores the correct state after an interactive back gesture is cancelled.
+        updateIPadTabs(navigationController, showing: viewController)
+    }
+    private func updateIPadTabs(_ navigationController: UINavigationController, showing viewController: UIViewController) {
+        if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .pad {
+            tabController?.setTabBarHidden(viewController !== navigationController.viewControllers.first, animated: false)
+        }
     }
     func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
         UserDefaults.standard.set(tabBarController.selectedIndex, forKey: "tianyiSelectedTab")
@@ -126,7 +139,7 @@ struct TianyiContainer: UIViewControllerRepresentable {
         // authentication and interactive flows retain their existing behavior.
         if ["Special:", "特殊:", "Category:", "分类:", "Talk:", "讨论:"].contains(where: { page.title.hasPrefix($0) }) {
             let host = WMFComponentHostingController(rootView: TianyiSiteView(url: page.url))
-            host.title = page.title; host.hidesBottomBarWhenPushed = true
+            host.title = page.title; host.hidesBottomBarWhenPushed = UIDevice.current.userInterfaceIdiom != .pad
             nav.pushViewController(host, animated: true)
             return
         }
@@ -136,7 +149,7 @@ struct TianyiContainer: UIViewControllerRepresentable {
         let host = WMFComponentHostingController(rootView: reader)
         host.title = page.title
         host.navigationItem.largeTitleDisplayMode = .never
-        host.hidesBottomBarWhenPushed = true
+        host.hidesBottomBarWhenPushed = UIDevice.current.userInterfaceIdiom != .pad
         nav.pushViewController(host, animated: true)
     }
 }

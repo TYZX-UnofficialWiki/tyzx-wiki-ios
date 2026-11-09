@@ -18,6 +18,14 @@ Bad Apple!! 改用 AVPlayer 播放本机音频，应用自带的正文动画逻�
 
 阅读器提供评论入口，保留站点登录、权限和提交机制。页面无评论区域时显示“此词条关闭了评论功能”，不以讨论页冒充评论。评论需要联网；未在正式站点发送测试评论。普通黑幕支持触摸揭示。
 
+## iPad 适配
+
+iPadOS 18 及以上在首页使用系统顶部浮动标签栏，进入词条后收起标签栏并保留返回导航，返回首页时恢复。阅读器支持横竖屏、目录与语言面板及分享弹窗。放大字号会重新排版正文；天一自定义信息框与图注跟随深色模式。评论状态在正文就绪后检测，不再等待无关媒体加载。
+
+已在 iPad mini（A17 Pro）/ iPadOS 26.5 深色模式与 13 英寸 iPad Pro（M5）/ iPadOS 27 浅色模式模拟器验证。范围与限制见[验证记录](TianyiWiki/VALIDATION.md)；尚未完成 iPad 真机验收。
+
+<p><img src="TianyiWiki/Screenshots/iPad-mini-dark-home.png" width="240" alt="iPad mini 深色首页"><img src="TianyiWiki/Screenshots/iPad-Pro-share-popover.png" width="420" alt="iPad Pro 横屏阅读和分享弹窗，大字号测试"></p>
+
 ## 当前站点
 
 | 语言 | 地址 |

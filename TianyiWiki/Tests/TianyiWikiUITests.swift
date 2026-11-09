@@ -1,9 +1,10 @@
 import XCTest
+import UIKit
 
 final class TianyiWikiUITests: XCTestCase {
     @MainActor func testReadingSearchAndSavedLibrary() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-tianyiSelectedTab", "0"]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-tianyiSelectedTab", "0", "-readerZoom", "1.0"]
         app.launch()
         continueAfterFailure = false
         XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 10))
@@ -16,10 +17,10 @@ final class TianyiWikiUITests: XCTestCase {
         if app.buttons["收藏词条"].exists { app.buttons["收藏词条"].tap() }
         XCTAssertTrue(app.buttons["取消收藏"].exists)
         app.navigationBars.buttons.firstMatch.tap()
-        app.tabBars.buttons["书架"].tap()
+        tab(app, "书架").tap()
         XCTAssertTrue(app.staticTexts["江苏省天一中学"].firstMatch.waitForExistence(timeout: 5))
         attach(app, "03-书架")
-        app.tabBars.buttons["搜索"].tap()
+        tab(app, "搜索").tap()
         let search = app.textFields["tianyi-search"]
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap()
@@ -28,13 +29,13 @@ final class TianyiWikiUITests: XCTestCase {
         attach(app, "04-搜索")
         app.terminate()
         app.launch()
-        app.tabBars.buttons["书架"].tap()
+        tab(app, "书架").tap()
         XCTAssertTrue(app.staticTexts["江苏省天一中学"].firstMatch.waitForExistence(timeout: 5))
         app.staticTexts["江苏省天一中学"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["正在阅读已保存正文 · 图片与媒体需联网"].waitForExistence(timeout: 10))
         attach(app, "05-离线正文")
         app.navigationBars.buttons.firstMatch.tap()
-        app.tabBars.buttons["设置"].tap()
+        tab(app, "设置").tap()
         XCTAssertTrue(app.staticTexts["维基语言"].exists)
         attach(app, "06-设置")
     }
@@ -45,7 +46,7 @@ final class TianyiWikiUITests: XCTestCase {
         for (code, tab, start) in cases {
             app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", code, "-tianyiSite", "zh"]
             app.launch()
-            XCTAssertTrue(app.tabBars.buttons[tab].waitForExistence(timeout: 10), code)
+            XCTAssertTrue(self.tab(app, tab).waitForExistence(timeout: 10), code)
             XCTAssertTrue(app.buttons[start].exists, code)
             attach(app, "language-\(code)")
             app.terminate()
@@ -74,31 +75,29 @@ final class TianyiWikiUITests: XCTestCase {
     @MainActor func testChangeInterfaceLanguageInSettings() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launchArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN", "-tianyiSelectedTab", "3"]
         app.launch()
-        let settings = app.tabBars.buttons.element(boundBy: 3)
-        XCTAssertTrue(settings.waitForExistence(timeout: 10))
-        settings.tap()
+        XCTAssertTrue(app.buttons["interface-language"].waitForExistence(timeout: 10))
         app.buttons["interface-language"].tap()
         app.buttons["中文"].tap()
-        XCTAssertTrue(app.tabBars.buttons["设置"].waitForExistence(timeout: 5))
+        XCTAssertTrue(tab(app, "设置").waitForExistence(timeout: 5))
         app.buttons["interface-language"].tap()
         app.buttons["English"].tap()
-        XCTAssertTrue(app.tabBars.buttons["Settings"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.tabBars.buttons["Explore"].exists)
+        XCTAssertTrue(tab(app, "Settings").waitForExistence(timeout: 5))
+        XCTAssertTrue(tab(app, "Explore").exists)
         app.buttons["interface-language"].tap()
         app.buttons["Français"].tap()
-        XCTAssertTrue(app.tabBars.buttons["Réglages"].waitForExistence(timeout: 5))
+        XCTAssertTrue(tab(app, "Réglages").waitForExistence(timeout: 5))
         app.buttons["interface-language"].tap()
         app.buttons["中文"].tap()
-        XCTAssertTrue(app.tabBars.buttons["设置"].waitForExistence(timeout: 5))
+        XCTAssertTrue(tab(app, "设置").waitForExistence(timeout: 5))
     }
     @MainActor func testBadAppleEasterEggPlaysPausesAndRestoresArticle() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-AppleLanguages", "(zh-Hans)"]
         app.launch()
-        app.tabBars.buttons["搜索"].tap()
+        tab(app, "搜索").tap()
         let search = app.textFields["tianyi-search"]
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap(); search.typeText("Bad Apple!!")
@@ -135,7 +134,7 @@ final class TianyiWikiUITests: XCTestCase {
         let arguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh"]
         app.launchArguments = arguments
         app.launch()
-        app.tabBars.buttons["搜索"].tap()
+        tab(app, "搜索").tap()
         let field = app.textFields["tianyi-search"]
         field.tap(); field.typeText("Bad Apple!!")
         let result = app.staticTexts["Bad Apple!!"].firstMatch
@@ -149,12 +148,13 @@ final class TianyiWikiUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.staticTexts["欢迎来到天一维基"].waitForExistence(timeout: 10))
         attach(app, "native-home-offline")
-        app.tabBars.buttons["书架"].tap()
+        tab(app, "书架").tap()
         app.buttons["阅读历史"].tap()
         app.staticTexts["Bad Apple!!"].firstMatch.tap()
         XCTAssertTrue(app.buttons["播放"].waitForExistence(timeout: 10))
         expectation(for: NSPredicate(format: "enabled == true"), evaluatedWith: app.buttons["播放"])
         waitForExpectations(timeout: 10)
+        XCTAssertTrue(app.staticTexts["已缓存正文、音乐与动画，可离线播放"].waitForExistence(timeout: 10))
         app.buttons["播放"].tap()
         XCTAssertTrue(app.buttons["暂停"].waitForExistence(timeout: 5))
         let progress = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "0:[0-9]{2} / 3:39")).firstMatch
@@ -162,8 +162,90 @@ final class TianyiWikiUITests: XCTestCase {
         waitForExpectations(timeout: 10)
         attach(app, "native-BadApple-offline")
     }
+    @MainActor func testEnabledCommentsRegionIsVisible() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-readerZoom", "1.0"]
+        app.launch()
+        XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 10))
+        app.buttons["开始阅读"].tap()
+        XCTAssertTrue(app.buttons["评论与讨论"].waitForExistence(timeout: 10))
+        app.buttons["评论与讨论"].tap()
+        let heading = app.webViews.staticTexts["访客评论"].firstMatch
+        XCTAssertTrue(heading.waitForExistence(timeout: 30))
+        XCTAssertTrue(app.descendants(matching: .any)["comments-loading"].waitForNonExistence(timeout: 15))
+        // WebKit on iPadOS 27 can expose a text node before it has a finite activation point.
+        // Verify its visible bounds instead of asking a read-only heading for a tap target.
+        let web = app.webViews.firstMatch
+        expectation(for: NSPredicate { _, _ in
+            let rect = heading.frame
+            return rect.width > 0 && rect.height > 0 && rect.minX.isFinite && rect.minY.isFinite && web.frame.contains(rect)
+        }, evaluatedWith: nil)
+        waitForExpectations(timeout: 15)
+        XCTAssertFalse(app.staticTexts["此词条关闭了评论功能"].exists)
+        attach(app, "comments-enabled")
+        // Read-only validation: never submit a comment to the production wiki.
+        app.buttons["完成"].tap()
+    }
+    @MainActor func testIPadRotationAndReaderPresentations() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { throw XCTSkip("iPad layout test") }
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-readerZoom", "1.6"]
+        XCUIDevice.shared.orientation = .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 10))
+        attach(app, "iPad-home-portrait")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        expectation(for: NSPredicate { _, _ in app.frame.width > app.frame.height }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        XCTAssertTrue(app.buttons["开始阅读"].isHittable)
+        attach(app, "iPad-home-landscape")
+        app.buttons["开始阅读"].tap()
+        XCTAssertTrue(app.webViews.staticTexts["江苏省天一中学"].firstMatch.waitForExistence(timeout: 30))
+        let tree = XCTAttachment(string: app.debugDescription)
+        tree.name = "iPad-reader-hierarchy"; tree.lifetime = .keepAlways; add(tree)
+        attach(app, "iPad-reader-landscape")
+        XCTAssertTrue(app.navigationBars.buttons.firstMatch.exists, "Reader must retain a visible back button")
+        for label in ["词条目录", "词条语言", "阅读选项", "评论与讨论", "分享词条"] {
+            XCTAssertTrue(app.buttons[label].isHittable, label)
+        }
+        app.buttons["词条目录"].tap()
+        XCTAssertTrue(app.buttons["完成"].waitForExistence(timeout: 5))
+        attach(app, "iPad-contents-sheet")
+        app.buttons["完成"].tap()
+        app.buttons["词条语言"].tap()
+        XCTAssertTrue(app.staticTexts["浏览其他语言站"].waitForExistence(timeout: 5))
+        app.buttons["完成"].tap()
+        app.buttons["阅读选项"].tap()
+        XCTAssertTrue(app.buttons["放大字号"].waitForExistence(timeout: 5))
+        app.buttons["放大字号"].tap()
+        app.buttons["分享词条"].tap()
+        XCTAssertTrue(app.otherElements["ActivityListView"].waitForExistence(timeout: 5))
+        attach(app, "iPad-share-popover")
+        // Dismiss the share popover by tapping outside its anchored presentation.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.15)).tap()
+        XCUIDevice.shared.orientation = .portrait
+        expectation(for: NSPredicate { _, _ in app.frame.height > app.frame.width }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        attach(app, "iPad-reader-portrait")
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 5))
+        XCTAssertTrue(tab(app, "搜索").isHittable, "Returning home must restore the iPad tabs")
+    }
+    @MainActor private func tab(_ app: XCUIApplication, _ title: String) -> XCUIElement {
+        let bottom = app.tabBars.buttons[title]
+        if bottom.exists { return bottom }
+        // iPadOS 18+ exposes the floating top tabs as cells rather than a TabBar.
+        let cell = app.cells.matching(identifier: title).firstMatch
+        if cell.exists { return cell }
+        return app.buttons[title].firstMatch
+    }
     @MainActor private func attach(_ app: XCUIApplication, _ name: String) {
-        let item = XCTAttachment(screenshot: app.screenshot())
+        // Accessibility geometry can update before the compositor commits rotation or sheets.
+        Thread.sleep(forTimeInterval: 0.5)
+        let item = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         item.name = name; item.lifetime = .keepAlways
         add(item)
     }

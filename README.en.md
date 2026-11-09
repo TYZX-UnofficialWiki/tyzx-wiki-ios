@@ -18,6 +18,12 @@ Bad Apple!! uses AVPlayer with cached audio and app-controlled text animation dr
 
 Comments retain the site’s authentication and permissions. Pages without a comment region show “Comments are disabled for this article”; discussion pages are not substituted. Comments need a connection. No live test comments were posted. Text spoilers support touch-to-reveal.
 
+## iPad layout
+
+On iPadOS 18 and later, the home screen uses the system floating top tabs. Opening an article hides the tabs while keeping back navigation; returning home restores them. The reader supports both orientations, contents and language sheets, and a share popover. Larger text reflows the article, and Tianyi infoboxes and captions follow Dark Mode. Comment detection starts when the document is ready, without waiting for unrelated media.
+
+Validated in simulators on iPad mini (A17 Pro), iPadOS 26.5 in Dark Mode, and 13-inch iPad Pro (M5), iPadOS 27 in Light Mode. See [validation notes](TianyiWiki/VALIDATION.md) for coverage and limits. Physical iPad testing remains outstanding.
+
 ## Wiki sites
 
 | Language | URL |

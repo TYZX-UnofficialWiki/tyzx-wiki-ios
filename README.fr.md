@@ -16,6 +16,12 @@ Bad Apple!! utilise AVPlayer et une animation du texte pilotée par le temps nat
 
 Les commentaires conservent l’authentification et les autorisations du site. Sans zone de commentaires, l’app indique qu’ils sont désactivés, sans remplacer cette fonction par une discussion. Ils nécessitent Internet ; aucun commentaire de test n’a été publié. Les textes masqués se révèlent au toucher.
 
+## Interface iPad
+
+À partir d’iPadOS 18, l’accueil utilise les onglets flottants du système en haut de l’écran. Ils disparaissent pendant la lecture, avec une navigation de retour conservée, puis réapparaissent à l’accueil. Le lecteur prend en charge les deux orientations, les panneaux de sommaire et de langues et le partage. L’agrandissement du texte réorganise le contenu ; les infobox Tianyi et les légendes suivent le mode sombre. La détection des commentaires commence dès que le document est prêt, sans attendre les médias annexes.
+
+Vérifié sur simulateurs : iPad mini (A17 Pro) sous iPadOS 26.5 en mode sombre et iPad Pro 13 pouces (M5) sous iPadOS 27 en mode clair. La portée et les limites figurent dans les [notes de validation](TianyiWiki/VALIDATION.md). Les essais sur iPad physique restent à effectuer.
+
 ## Fonctionnalités et langues
 
 - Sous iOS / iPadOS 26 et ultérieur, la navigation et les onglets natifs utilisent Liquid Glass et suivent les réglages système. Le fond des articles privilégie la lecture ; les systèmes antérieurs gardent un style natif compatible.

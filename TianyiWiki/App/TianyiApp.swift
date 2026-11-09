@@ -104,10 +104,12 @@ struct TianyiContainer: UIViewControllerRepresentable {
     }
     func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
         updateIPadTabs(navigationController, showing: viewController)
+        navigationController.setToolbarHidden(!(viewController is TianyiArticleToolbarHosting), animated: false)
     }
     func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
         // Also restores the correct state after an interactive back gesture is cancelled.
         updateIPadTabs(navigationController, showing: viewController)
+        navigationController.setToolbarHidden(!(viewController is TianyiArticleToolbarHosting), animated: false)
     }
     private func updateIPadTabs(_ navigationController: UINavigationController, showing viewController: UIViewController) {
         if #available(iOS 18.0, *), UIDevice.current.userInterfaceIdiom == .pad {
@@ -143,10 +145,11 @@ struct TianyiContainer: UIViewControllerRepresentable {
             nav.pushViewController(host, animated: true)
             return
         }
-        let reader = TianyiReaderView(page: page) { [weak self, weak nav] linked in
+        let toolbar = TianyiArticleToolbarController(pageURL: page.url)
+        let reader = TianyiReaderView(page: page, toolbar: toolbar) { [weak self, weak nav] linked in
             guard let self, let nav else { return }; self.show(linked, in: nav)
         }.environmentObject(library)
-        let host = WMFComponentHostingController(rootView: reader)
+        let host = TianyiReaderViewController(rootView: reader, toolbar: toolbar)
         host.title = page.title
         host.navigationItem.largeTitleDisplayMode = .never
         host.hidesBottomBarWhenPushed = UIDevice.current.userInterfaceIdiom != .pad

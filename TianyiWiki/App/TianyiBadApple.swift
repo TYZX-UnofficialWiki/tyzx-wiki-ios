@@ -53,9 +53,3 @@ actor TianyiBadAppleCache {
     func stop() { pause(); player.seek(to: .zero); time = 0 }
     func tick() { time = max(0, player.currentTime().seconds.isFinite ? player.currentTime().seconds : 0); if time >= 219.126 { stop() } }
 }
-struct TianyiGlassBar: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) { content.glassEffect(.regular, in: .capsule).padding(.horizontal, 12).padding(.bottom, 8) }
-        else { content.background(.bar) }
-    }
-}

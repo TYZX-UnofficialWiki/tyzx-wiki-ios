@@ -62,7 +62,7 @@ final class TianyiWikiUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["江苏省天一中学"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 30))
         // Explicit refresh also refreshes older cached articles without langlinks.
-        app.buttons["Reading options"].tap()
+        app.buttons["More"].tap()
         app.buttons["Refresh article"].tap()
         app.buttons["Article languages"].tap()
         let linked = app.staticTexts["Jiangsu Tianyi High School"].firstMatch
@@ -122,9 +122,10 @@ final class TianyiWikiUITests: XCTestCase {
         app.buttons["阅读词条"].tap()
         XCTAssertTrue(app.buttons["播放"].exists)
         XCTAssertEqual(progress.label, "0:00 / 3:39")
+        app.buttons["更多"].tap()
         app.buttons["评论与讨论"].tap()
         XCTAssertTrue(app.buttons["完成"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["此词条关闭了评论功能"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["此词条关闭了评论功能"].waitForExistence(timeout: 30))
         app.buttons["完成"].tap()
         attach(app, "BadApple-restored")
     }
@@ -162,6 +163,26 @@ final class TianyiWikiUITests: XCTestCase {
         waitForExpectations(timeout: 10)
         attach(app, "native-BadApple-offline")
     }
+    @MainActor func testUpstreamArticleToolbarAndFind() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-tianyiSelectedTab", "0", "-tianyiInterface", "zh", "-tianyiSite", "zh", "-readerZoom", "1.0", "-AppleLanguages", "(zh-Hans)"]
+        app.launch()
+        XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 10))
+        app.buttons["开始阅读"].tap()
+        XCTAssertTrue(app.webViews.staticTexts["江苏省天一中学"].firstMatch.waitForExistence(timeout: 30))
+        let bar = app.toolbars.firstMatch
+        XCTAssertTrue(bar.waitForExistence(timeout: 5), "Reader must use the navigation controller's native UIToolbar")
+        for label in ["词条目录", "词条语言", "词条内查找", "阅读选项", "更多"] {
+            XCTAssertTrue(app.buttons[label].exists, label)
+        }
+        attach(app, "upstream-article-toolbar")
+        app.buttons["词条内查找"].tap()
+        let field = app.searchFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap(); field.typeText("历史")
+        attach(app, "upstream-article-find")
+    }
     @MainActor func testEnabledCommentsRegionIsVisible() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -169,7 +190,8 @@ final class TianyiWikiUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["开始阅读"].waitForExistence(timeout: 10))
         app.buttons["开始阅读"].tap()
-        XCTAssertTrue(app.buttons["评论与讨论"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["更多"].waitForExistence(timeout: 10))
+        app.buttons["更多"].tap()
         app.buttons["评论与讨论"].tap()
         let heading = app.webViews.staticTexts["访客评论"].firstMatch
         XCTAssertTrue(heading.waitForExistence(timeout: 30))
@@ -208,7 +230,7 @@ final class TianyiWikiUITests: XCTestCase {
         tree.name = "iPad-reader-hierarchy"; tree.lifetime = .keepAlways; add(tree)
         attach(app, "iPad-reader-landscape")
         XCTAssertTrue(app.navigationBars.buttons.firstMatch.exists, "Reader must retain a visible back button")
-        for label in ["词条目录", "词条语言", "阅读选项", "评论与讨论", "分享词条"] {
+        for label in ["词条目录", "词条语言", "阅读选项", "词条内查找", "更多"] {
             XCTAssertTrue(app.buttons[label].isHittable, label)
         }
         app.buttons["词条目录"].tap()
@@ -221,6 +243,7 @@ final class TianyiWikiUITests: XCTestCase {
         app.buttons["阅读选项"].tap()
         XCTAssertTrue(app.buttons["放大字号"].waitForExistence(timeout: 5))
         app.buttons["放大字号"].tap()
+        app.buttons["更多"].tap()
         app.buttons["分享词条"].tap()
         XCTAssertTrue(app.otherElements["ActivityListView"].waitForExistence(timeout: 5))
         attach(app, "iPad-share-popover")

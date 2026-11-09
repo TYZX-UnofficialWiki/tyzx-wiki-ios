@@ -40,6 +40,7 @@ import WMFComponents
 struct TianyiReaderView: View {
     @AppStorage("tianyiInterface") private var interface = TianyiL10n.defaultLanguage
     let page: WMFTianyiPage
+    let toolbar: TianyiArticleToolbarController
     let open: @MainActor @Sendable (WMFTianyiPage) -> Void
     @StateObject private var model: TianyiArticleViewModel
     @EnvironmentObject private var library: TianyiLibrary
@@ -50,15 +51,19 @@ struct TianyiReaderView: View {
     @State private var showLanguages = false
     @State private var anchor = ""
     @State private var scrollRequest = UUID()
+    @State private var findRequest: UUID?
     @State private var saving = false
     @State private var showComments = false
     @State private var commentsAvailable: Bool?
     @StateObject private var badApple = TianyiBadApplePlayer()
     @Environment(\.scenePhase) private var scenePhase
     private var isBadApple: Bool { page.title.replacingOccurrences(of: "_", with: " ").lowercased() == "bad apple!!" }
-    init(page: WMFTianyiPage, open: @escaping @MainActor @Sendable (WMFTianyiPage) -> Void) {
-        self.page = page; self.open = open
+    init(page: WMFTianyiPage, toolbar: TianyiArticleToolbarController, open: @escaping @MainActor @Sendable (WMFTianyiPage) -> Void) {
+        self.page = page; self.toolbar = toolbar; self.open = open
         _model = StateObject(wrappedValue: TianyiArticleViewModel(page: page))
+    }
+    private var toolbarState: TianyiArticleToolbarController.State {
+        .init(available: model.article != nil, hasContents: model.article?.sections.isEmpty == false, saved: library.contains(page), saving: saving)
     }
     var body: some View {
         VStack(spacing: 0) {
@@ -83,43 +88,31 @@ struct TianyiReaderView: View {
                 if !badApple.ready { Button(t("缓存彩蛋供离线播放")) { Task { await badApple.prepare() } } }
             }
             if let article = model.article {
-                TianyiArticleWebView(article: article, page: page, zoom: zoom, dark: colorScheme == .dark, anchor: anchor, scrollRequest: scrollRequest, frames: badApple.frames, playbackTime: badApple.time, animating: badApple.playing, open: open)
+                TianyiArticleWebView(article: article, page: page, zoom: zoom, dark: colorScheme == .dark, anchor: anchor, scrollRequest: scrollRequest, findRequest: findRequest, frames: badApple.frames, playbackTime: badApple.time, animating: badApple.playing, open: open)
             } else if !model.loading && model.error == nil {
                 ContentUnavailableView(t("正在准备词条"), systemImage: "book")
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                Button { showContents = true } label: { Image(systemName: "list.bullet") }.accessibilityLabel(t("词条目录"))
-                    .disabled(model.article?.sections.isEmpty != false)
-                Spacer()
-                Button { showLanguages = true } label: { Image(systemName: "globe") }
-                    .accessibilityLabel(t("词条语言"))
-                Spacer()
-                Button {
-                    saving = true
-                    Task { await library.toggle(page, article: model.article); saving = false }
-                } label: { Image(systemName: library.contains(page) ? "bookmark.fill" : "bookmark") }
-                    .accessibilityLabel(library.contains(page) ? t("取消收藏") : t("收藏词条"))
-                    .disabled(model.article == nil || saving)
-                Spacer()
-                Menu {
-                    Button(t("放大字号")) { zoom = min(1.8, zoom + 0.1) }
-                    Button(t("缩小字号")) { zoom = max(0.8, zoom - 0.1) }
-                    Button(t("刷新正文")) { Task { await model.refresh(library: library) } }
-                    Button(t("打开原网页")) { openURL(page.url) }
-                    Button(t("作者与修订历史")) {
-                        var parts = URLComponents(url: page.url, resolvingAgainstBaseURL: false)!
-                        parts.queryItems?.append(URLQueryItem(name: "action", value: "history"))
-                        if let url = parts.url { openURL(url) }
-                    }
-                } label: { Image(systemName: "textformat.size") }.accessibilityLabel(t("阅读选项"))
-                Spacer()
-                Button { commentsAvailable = nil; showComments = true } label: { Image(systemName: "text.bubble") }.accessibilityLabel(t("评论与讨论"))
-                Spacer()
-                ShareLink(item: page.url) { Image(systemName: "square.and.arrow.up") }.accessibilityLabel(t("分享词条"))
-            }.font(.title3).padding(.horizontal, 28).padding(.vertical, 16).modifier(TianyiGlassBar())
+        .onReceive(toolbar.commands) { command in
+            switch command {
+            case .contents: showContents = true
+            case .languages: showLanguages = true
+            case .save:
+                saving = true
+                Task { await library.toggle(page, article: model.article); saving = false }
+            case .find: findRequest = UUID()
+            case .larger: zoom = min(1.8, zoom + 0.1)
+            case .smaller: zoom = max(0.8, zoom - 0.1)
+            case .refresh: Task { await model.refresh(library: library) }
+            case .source: openURL(page.url)
+            case .history:
+                var parts = URLComponents(url: page.url, resolvingAgainstBaseURL: false)!
+                parts.queryItems?.append(URLQueryItem(name: "action", value: "history"))
+                if let url = parts.url { openURL(url) }
+            case .comments: commentsAvailable = nil; showComments = true
+            }
         }
+        .onChange(of: toolbarState, initial: true) { _, state in toolbar.update(state: state) }
         .sheet(isPresented: $showContents) {
             VStack {
                 HStack { Text(t("词条目录")).font(.headline); Spacer(); Button(t("完成")) { showContents = false } }.padding()
@@ -191,6 +184,7 @@ struct TianyiArticleWebView: UIViewRepresentable {
     let dark: Bool
     let anchor: String
     let scrollRequest: UUID
+    var findRequest: UUID? = nil
     var frames: String? = nil
     var playbackTime: Double = 0
     var animating: Bool = false
@@ -204,6 +198,7 @@ struct TianyiArticleWebView: UIViewRepresentable {
         config.userContentController.addUserScript(WKUserScript(source: Self.interactions, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = context.coordinator
+        web.isFindInteractionEnabled = true
         web.isOpaque = false; web.backgroundColor = .systemBackground
         return web
     }
@@ -225,6 +220,10 @@ struct TianyiArticleWebView: UIViewRepresentable {
         if context.coordinator.lastTime != playbackTime || context.coordinator.lastActive != animating {
             context.coordinator.lastTime = playbackTime; context.coordinator.lastActive = animating
             web.evaluateJavaScript("window.baDraw?.(\(playbackTime),\(animating ? "true" : "false"))", completionHandler: nil)
+        }
+        if let findRequest, context.coordinator.findRequest != findRequest {
+            context.coordinator.findRequest = findRequest
+            web.findInteraction?.presentFindNavigator(showingReplace: false)
         }
         if context.coordinator.scrollRequest != scrollRequest {
             context.coordinator.scrollRequest = scrollRequest
@@ -264,6 +263,7 @@ struct TianyiArticleWebView: UIViewRepresentable {
         var frames: String?
         var identity = ""
         var scrollRequest: UUID?
+        var findRequest: UUID?
         init(_ parent: TianyiArticleWebView) { self.parent = parent }
         func applyTextSize(_ web: WKWebView) {
             web.evaluateJavaScript("document.body.style.fontSize='\(17 * parent.zoom)px'", completionHandler: nil)

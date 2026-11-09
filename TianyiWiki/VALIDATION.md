@@ -1,6 +1,6 @@
 # 验证记录
 
-最新 iPad 专项验收：2026-11-09，见文末。以下保留此前版本记录。
+最新阅读底栏移植验收：2026-11-09，见文末。以下保留此前版本记录。
 
 日期：2026-11-08。上游基线：`0b9980f19f5307f82d072298c3624e568bc1c6be`。工具链：Xcode 27.2、Swift 6.4.2；天一应用采用 Swift 6 语言模式。
 
@@ -90,3 +90,21 @@ xcodebuild -project TianyiWiki.xcodeproj -scheme TianyiWiki \
   -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro),OS=26.5' \
   -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
 ```
+
+## 上游阅读底栏移植（2026-11-09）
+
+已确认用户截图中的底栏实现在本仓库上游 `Wikipedia/Code/ArticleToolbarController.swift`，图标按钮在 `IconBarButtonItem.swift`。天一版移植这两处的 UIToolbar 排列与 UIButton/customView 构造，沿用 WMF 的省略号字体配置；六组 PDF 图标与上游 imageset 逐字节一致。原始上游文件及 MIT 声明保留，详见 [来源说明](Branding/ToolbarSources.md)。
+
+iOS 26+：目录独立在左，语言、收藏、页内查找、字号、更多合为右侧系统玻璃组。旧系统使用上游同一方法的兼容排列。移除了原先手绘的 SwiftUI glassEffect 整条胶囊，底栏交给 UINavigationController 自带的 UIToolbar；UIKit 容器持有 toolbarItems，正文由上游 WMFComponentHostingController 承载，避免 SwiftUI 自动清空原生工具项。
+
+动作接入天一现有数据与服务：评论、分享、修订历史、刷新和原网页入口移至更多菜单；字号保留独立按钮；页内查找使用 WebKit 本地 UIFindInteraction。没有迁入 Wikipedia 账号、监视列表、编辑器或统计流程，也没有生成无效菜单项。
+
+83 个界面键在六语言中集合一致、非空；六组图标与上游原件一致；六个 README 已同步底栏说明、截图和来源。新增原生工具栏与查找用例，并更新旧评论测试以先打开更多菜单。原有离线阅读及 Bad Apple 播放机制不变。
+
+本轮验证：iPhone 17 Pro / iOS 26.5 的八个 iPhone 流程逐项验证通过，iPad 专用布局用例跳过；iPhone 18 Pro / iOS 27 的底栏/查找、阅读收藏及 Bad Apple 三项通过；iPad mini / iPadOS 26.5 的纵横屏、目录/语言/字号面板、更多菜单分享弹窗、查找和评论可见性通过。Debug 与无签名 Release 构建成功。
+
+首轮评论用例仍等待原来的直达评论按钮，已改为先打开更多菜单。另一次完整批次中，关闭评论提示的在线网页加载超过原来的 15 秒等待；与其他在线页面统一为 30 秒后，彩蛋及关闭提示单独复测通过。没有把该失败批次宣称为完整通过。其他正文、六语言、跨语言、收藏与离线流程在该批次通过；最终补测三个用例全部通过。
+
+结果包：`/tmp/tyzx-toolbar-acceptance.xcresult`（含上述在线等待超时）、`/tmp/tyzx-toolbar-final-verification.xcresult`（三项复验通过）、`/tmp/tyzx-toolbar-iphone27-final.xcresult`、`/tmp/tyzx-toolbar-iphone27-verified.xcresult` 与 `/tmp/tyzx-toolbar-ipad-verified.xcresult`。当前 scheme 共九项 UI 测试。
+
+最新截图：`Screenshots/upstream-article-toolbar.png`、`upstream-article-find.png`、`upstream-ipad-share-popover.png`；已更新离线彩蛋及英文跨语言截图。当前仅模拟器验证，没有新增真机验收或生产评论提交。

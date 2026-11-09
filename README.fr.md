@@ -10,7 +10,7 @@ Ce dépôt est un fork de [Wikipedia iOS](https://github.com/wikimedia/wikipedia
 
 L’accueil chinois est reconstruit en cartes natives avec le lettrage transparent fourni et les photos du campus. Le texte et les images sont intégrés, disponibles au premier démarrage hors ligne ; cet instantané est actualisé avec les versions. Les modifications récentes sont mises en cache : cinq articles au maximum, dernière modification de chacun uniquement.
 
-Sous iOS 26+, les commandes de lecture utilisent glassEffect. Le mode sombre couvre légendes, tableaux et pages web de compatibilité, dont les annonces et la navigation sont masquées.
+La barre de lecture provient d’ArticleToolbarController et d’IconBarButtonItem en amont, avec les mêmes icônes et UIToolbar natif. Sous iOS 26+, le sommaire est séparé à gauche ; langues, favoris, recherche dans l’article, apparence et autres actions forment le groupe de verre système à droite. Commentaires, partage et historique sont dans « Plus ». Le mode sombre couvre légendes, tableaux et pages web de compatibilité, dont les annonces et la navigation sont masquées.
 
 Bad Apple!! utilise AVPlayer et une animation du texte pilotée par le temps natif. La première visite télécharge musique et images binaires de l’animation et conserve le texte. Ensuite la lecture utilise les fichiers locaux, sans charger la page d’origine ; les médias liés peuvent nécessiter Internet. Effacer les articles hors ligne supprime aussi ces données.
 

@@ -6,13 +6,13 @@ An iPhone and iPad client for the **unofficial Jiangsu Tianyi High School wiki**
 
 This repository is a fork of [wikimedia/wikipedia-ios](https://github.com/wikimedia/wikipedia-ios). The Tianyi client reuses the upstream `WMFData` networking, request cancellation, and storage infrastructure, plus `WMFComponents` navigation controllers, fonts, and HTML snippet handling. It adds an adapter for Tianyi Wiki's standard MediaWiki API. Upstream copyright and license notices remain intact; the original README is preserved in [the upstream documentation archive](docs/upstream-wikipedia-ios.md).
 
-<p><img src="TianyiWiki/Screenshots/native-home-offline.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/cross-language-en.png" width="240" alt="Tianyi Wiki reader"></p>
+<p><img src="TianyiWiki/Screenshots/native-home-offline.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/upstream-article-toolbar.png" width="240" alt="Tianyi Wiki reader"></p>
 
 ## Native home and offline playback
 
 The Chinese wiki home is rebuilt as native cards from a bundled snapshot, with the maintainer’s transparent wordmark and campus photos. Text and home images work on first offline launch; the snapshot updates with app releases. Recent changes refresh online and cache locally: only the newest change per title, up to five entries.
 
-The reader uses real glassEffect controls on iOS 26+. Dark styling includes captions, tables and necessary web fallbacks, which hide site notices and navigation. Articles and help pages favor local article layout.
+The reader toolbar is ported from upstream ArticleToolbarController and IconBarButtonItem, with the same icons and native UIToolbar. On iOS 26+, contents stand alone on the left; language, save, find, appearance and more form the trailing system glass group. Comments, sharing and revision history are in More. Dark styling includes captions, tables and necessary web fallbacks, which hide site notices and navigation. Articles and help pages favor local article layout.
 
 Bad Apple!! uses AVPlayer with cached audio and app-controlled text animation driven by native playback time. The first visit downloads audio and frames and saves article HTML. Subsequent playback uses local files, without loading the original page. Linked images and external resources may still need a connection. Clearing offline articles also deletes these assets.
 

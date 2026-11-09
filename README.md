@@ -6,13 +6,13 @@
 
 本仓库 fork 自 [wikimedia/wikipedia-ios](https://github.com/wikimedia/wikipedia-ios)。天一版复用上游 `WMFData` 的网络、取消请求与存储能力，以及 `WMFComponents` 的导航、字体和 HTML 摘要处理；另行适配天一维基的 MediaWiki API。上游许可证与作者声明保留，原始说明移至 [上游 README 存档](docs/upstream-wikipedia-ios.md)。
 
-<p><img src="TianyiWiki/Screenshots/native-home-offline.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/native-BadApple-offline.png" width="240" alt="Tianyi Wiki reader"></p>
+<p><img src="TianyiWiki/Screenshots/native-home-offline.png" width="240" alt="Tianyi Wiki"><img src="TianyiWiki/Screenshots/upstream-article-toolbar.png" width="240" alt="Tianyi Wiki reader"></p>
 
 ## 原生首页与离线播放
 
 首页按中文站首页的真实栏目和内容重建为原生卡片，使用维护者提供的透明字标，保留校园照片及来源入口。文字与首页图片随应用内置，首次离线启动也可见；这是随版本更新的首页快照，不伪装为实时网页。最近更改联网刷新并在本机缓存，按标题仅保留最新记录，最多 5 条。
 
-阅读底栏在 iOS 26+ 使用真正的 `glassEffect`。深色模式同时覆盖正文标题、图注、表格以及必要的站点兼容页面；兼容页面隐藏顶部公告和站点导航。普通词条和帮助页优先使用应用正文排版。
+阅读底栏移植自上游 `ArticleToolbarController` 和 `IconBarButtonItem`：使用相同图标与原生 `UIToolbar`，iOS 26+ 将目录独立置于左侧，其余按钮组成右侧系统玻璃分组。词条语言、收藏、词条内查找、字号和更多保持上游顺序；评论、分享与修订历史位于“更多”。深色模式同时覆盖正文标题、图注、表格以及必要的站点兼容页面；兼容页面隐藏顶部公告和站点导航。普通词条和帮助页优先使用应用正文排版。
 
 Bad Apple!! 改用 AVPlayer 播放本机音频，应用自带的正文动画逻辑按原生时间驱动黑幕。首次打开需联网下载音乐与帧数据，同时缓存词条正文，之后可从本机播放。远端原网页不参与播放；图片和外链仍不保证离线。清除离线收藏时也删除彩蛋素材。
 
@@ -24,7 +24,7 @@ iPadOS 18 及以上在首页使用系统顶部浮动标签栏，进入词条后�
 
 已在 iPad mini（A17 Pro）/ iPadOS 26.5 深色模式与 13 英寸 iPad Pro（M5）/ iPadOS 27 浅色模式模拟器验证。范围与限制见[验证记录](TianyiWiki/VALIDATION.md)；尚未完成 iPad 真机验收。
 
-<p><img src="TianyiWiki/Screenshots/iPad-mini-dark-home.png" width="240" alt="iPad mini 深色首页"><img src="TianyiWiki/Screenshots/iPad-Pro-share-popover.png" width="420" alt="iPad Pro 横屏阅读和分享弹窗，大字号测试"></p>
+<p><img src="TianyiWiki/Screenshots/iPad-mini-dark-home.png" width="240" alt="iPad mini 深色首页"><img src="TianyiWiki/Screenshots/upstream-ipad-share-popover.png" width="420" alt="iPad 横屏阅读和分享弹窗，大字号测试"></p>
 
 ## 当前站点
 
